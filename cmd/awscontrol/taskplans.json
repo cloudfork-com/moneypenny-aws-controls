@@ -1,0 +1,15 @@
+[
+    {
+        "tags-name": "seaspray-test-parq-fetcher-friendly-raccoon",
+        "state-changes": [
+            {
+                "desired-state": "RUNNING",
+                "cron": "0 8 1-5"
+            },
+            {
+                "desired-state": "STOPPPED",
+                "cron": "0 18 1-5"
+            }
+        ]
+    }
+]

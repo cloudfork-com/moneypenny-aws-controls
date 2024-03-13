@@ -1,0 +1,13 @@
+{
+    "task-arn": "arn:aws:ecs:eu-central-1:911184320458:task/QR3GrimlockCluster/ee80379664954dc9af3d2a57d5b6128e",
+    "state-changes": [
+        {
+            "desired-state": "RUNNING",
+            "cron": "0 9 1-5"
+        },
+        {
+            "desired-state": "STOPPPED",
+            "cron": "0 18 1-5"
+        }
+    ]
+}
