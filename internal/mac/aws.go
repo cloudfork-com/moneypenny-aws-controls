@@ -164,3 +164,21 @@ func TaskForService2(client *ecs.Client, clusterARN, shortServiceName string) ([
 	}
 	return allInfos.Tasks, nil
 }
+
+func StartTask(client *ecs.Client, service Service, task types.Task) error {
+	_, err := client.StartTask(context.Background(), &ecs.StartTaskInput{
+		ContainerInstances: []string{*task.ContainerInstanceArn},
+		TaskDefinition:     task.TaskDefinitionArn,
+		Cluster:            task.ClusterArn,
+	})
+	return err
+}
+
+func StopTask(client *ecs.Client, task types.Task) error {
+	_, err := client.StopTask(context.Background(), &ecs.StopTaskInput{
+		Task:    task.TaskArn,
+		Cluster: task.ClusterArn,
+		Reason:  aws.String("moneypenny-aws-controls"),
+	})
+	return err
+}

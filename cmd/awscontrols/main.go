@@ -100,6 +100,10 @@ func main() {
 			tasks, _ := mac.TaskForService2(client, event.ClusterARN(), event.Name())
 			for _, other := range tasks {
 				slog.Info("task", "started", *other.StartedAt, "by", Star(other.StartedBy), "current-state", Star(other.LastStatus))
+
+				if event.DesiredState == mac.Stopped && *other.LastStatus == mac.Running {
+					slog.Info("running but must be stopped")
+				}
 			}
 		}
 	}
