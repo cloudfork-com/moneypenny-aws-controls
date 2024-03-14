@@ -1,13 +1,13 @@
 [
     {
-        "tags-name": "seaspray-test-parq-fetcher-friendly-raccoon",
+        "service-arn": "arn:aws:ecs:eu-central-1:911184320458:service/QR3GrimlockCluster/qr3-alphatrion",
         "state-changes": [
             {
                 "desired-state": "RUNNING",
                 "cron": "0 8 1-5"
             },
             {
-                "desired-state": "STOPPPED",
+                "desired-state": "STOPPED",
                 "cron": "0 18 1-5"
             }
         ]

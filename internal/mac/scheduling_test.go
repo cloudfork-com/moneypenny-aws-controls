@@ -9,27 +9,27 @@ import (
 )
 
 func TestDayPlan(t *testing.T) {
-	task := Task{
-		Name: "task",
+	task := Service{
+		ARN: "myservice",
 	}
 	tpOn := TimePlan{
-		Task:         task,
+		Service:      task,
 		DesiredState: Running,
 		Hour:         9,
 		Minute:       1,
 	}
 	tpOff := TimePlan{
-		Task:         task,
+		Service:      task,
 		DesiredState: Stopped,
 		Hour:         18,
 		Minute:       2,
 	}
-	dp := DayPlan{
+	dp := &DayPlan{
 		Weekday: 2,
 		Plans:   []TimePlan{tpOn, tpOff},
 	}
 	wp := WeekPlan{
-		Plans: []DayPlan{dp},
+		Plans: []*DayPlan{dp},
 	}
 	for _, each := range wp.ScheduledEventsOn(time.Now()) {
 		t.Logf("event: %v", each)
@@ -40,15 +40,17 @@ func TestDayPlan(t *testing.T) {
 	json.NewEncoder(os.Stdout).Encode(wp)
 }
 
-//go:embed taskplan.json
-var taskplanspec []byte
-
-func TestTaskPlan(t *testing.T) {
-	tp := new(TaskPlan)
-	json.Unmarshal(taskplanspec, &tp)
-	t.Log(tp)
-	t.Log(tp.Validate())
-	for _, each := range tp.StateChanges {
-		t.Log(each.schedule.Next(time.Now()))
+func TestWeekPlanAddServicePlan(t *testing.T) {
+	sp := ServicePlan{}
+	json.Unmarshal(serviceplanspec, &sp)
+	sp.Validate()
+	wp := new(WeekPlan)
+	wp.AddServicePlan(sp)
+	json.NewEncoder(os.Stdout).Encode(wp)
+	for _, each := range wp.ScheduleForDay(1) {
+		t.Log(each)
 	}
 }
+
+//go:embed service-plan.json
+var serviceplanspec []byte

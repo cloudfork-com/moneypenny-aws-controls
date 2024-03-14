@@ -124,7 +124,7 @@ func NameOfService(service types.Service) string {
 }
 
 func TaskForService(client *ecs.Client, service types.Service) ([]types.Task, error) {
-	slog.Info("collecting tasks", "service", service.ServiceName)
+	slog.Info("collecting tasks", "service", *service.ServiceName)
 	ctx := context.Background()
 	taskList, err := client.ListTasks(ctx, &ecs.ListTasksInput{
 		Cluster:     service.ClusterArn,
@@ -136,6 +136,27 @@ func TaskForService(client *ecs.Client, service types.Service) ([]types.Task, er
 	}
 	allInfos, err := client.DescribeTasks(ctx, &ecs.DescribeTasksInput{
 		Cluster: service.ClusterArn,
+		Tasks:   taskList.TaskArns,
+	})
+	if err != nil {
+		return []types.Task{}, err
+	}
+	return allInfos.Tasks, nil
+}
+
+func TaskForService2(client *ecs.Client, clusterARN, shortServiceName string) ([]types.Task, error) {
+	slog.Info("collecting tasks", "service", shortServiceName)
+	ctx := context.Background()
+	taskList, err := client.ListTasks(ctx, &ecs.ListTasksInput{
+		Cluster:     aws.String(clusterARN),
+		LaunchType:  types.LaunchTypeFargate,
+		ServiceName: aws.String(shortServiceName),
+	})
+	if err != nil {
+		return []types.Task{}, err
+	}
+	allInfos, err := client.DescribeTasks(ctx, &ecs.DescribeTasksInput{
+		Cluster: aws.String(clusterARN),
 		Tasks:   taskList.TaskArns,
 	})
 	if err != nil {

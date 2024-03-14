@@ -6,7 +6,6 @@ require (
 	github.com/aws/aws-sdk-go v1.50.36
 	github.com/aws/aws-sdk-go-v2/config v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.2
-	github.com/robfig/cron/v3 v3.0.1
 )
 
 require (
