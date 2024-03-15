@@ -1,5 +1,5 @@
 {
-    "service-arn": "arn:aws:ecs:eu-central-1:911184320458:service/QR3GrimlockCluster/qr3-alphatrion",
+    "service-arn": "arn:aws:ecs:eu-central-1:00000:service/cluster/test",
     "state-changes": [
         {
             "desired-state": "RUNNING",

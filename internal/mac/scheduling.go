@@ -12,7 +12,8 @@ const Stopped = "STOPPED"
 
 // ECS service
 type Service struct {
-	ARN string `json:"service-arn"`
+	ARN               string `json:"service-arn"`
+	DesiredTasksCount int    `json:"desired-tasks-count"`
 }
 
 func (s Service) Name() string {

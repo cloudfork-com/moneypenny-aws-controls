@@ -144,7 +144,7 @@ func TaskForService(client *ecs.Client, service types.Service) ([]types.Task, er
 	return allInfos.Tasks, nil
 }
 
-func TaskForService2(client *ecs.Client, clusterARN, shortServiceName string) ([]types.Task, error) {
+func TasksForService(client *ecs.Client, clusterARN, shortServiceName string) ([]types.Task, error) {
 	slog.Info("collecting tasks", "service", shortServiceName)
 	ctx := context.Background()
 	taskList, err := client.ListTasks(ctx, &ecs.ListTasksInput{
@@ -166,6 +166,7 @@ func TaskForService2(client *ecs.Client, clusterARN, shortServiceName string) ([
 }
 
 func StartTask(client *ecs.Client, service Service, task types.Task) error {
+	slog.Info("starting task", "arn", *task.TaskDefinitionArn)
 	_, err := client.StartTask(context.Background(), &ecs.StartTaskInput{
 		ContainerInstances: []string{*task.ContainerInstanceArn},
 		TaskDefinition:     task.TaskDefinitionArn,
@@ -175,10 +176,58 @@ func StartTask(client *ecs.Client, service Service, task types.Task) error {
 }
 
 func StopTask(client *ecs.Client, task types.Task) error {
+	slog.Info("stopping task", "arn", *task.TaskArn)
 	_, err := client.StopTask(context.Background(), &ecs.StopTaskInput{
 		Task:    task.TaskArn,
 		Cluster: task.ClusterArn,
 		Reason:  aws.String("moneypenny-aws-controls"),
 	})
 	return err
+}
+
+func StartService(client *ecs.Client, service Service) error {
+	slog.Info("starting service", "arn", service.ARN)
+	count := int32(service.DesiredTasksCount)
+	if count == 0 { //unspecified
+		count = 1
+	}
+	_, err := client.UpdateService(context.Background(), &ecs.UpdateServiceInput{
+		Service:      aws.String(service.Name()),
+		DesiredCount: aws.Int32(count),
+		Cluster:      aws.String(service.ClusterARN()),
+	})
+	return err
+}
+
+func StopService(client *ecs.Client, service Service) error {
+	slog.Info("stopping service", "arn", service.ARN)
+	_, err := client.UpdateService(context.Background(), &ecs.UpdateServiceInput{
+		Service:      aws.String(service.Name()),
+		DesiredCount: aws.Int32(0),
+		Cluster:      aws.String(service.ClusterARN()),
+	})
+	if err != nil {
+		return err
+	}
+	all, err := TasksForService(client, service.ClusterARN(), service.Name())
+	if err != nil {
+		return err
+	}
+	for _, each := range all {
+		if err := StopTask(client, each); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func IsServiceRunning(client *ecs.Client, service Service) bool {
+	// at least one task must be running
+	tasks, _ := TasksForService(client, service.ClusterARN(), service.Name())
+	for _, each := range tasks {
+		if each.LastStatus != nil && *each.LastStatus == Running {
+			return true
+		}
+	}
+	return false
 }
