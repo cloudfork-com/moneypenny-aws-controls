@@ -1,4 +1,4 @@
-run:
+plan:
 	AWS_PROFILE=realm-europe-prod go run *.go
 
 apply:

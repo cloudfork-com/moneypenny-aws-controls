@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 )
 
-func AllServices(client *ecs.Client) (list []types.Service, err error) {
+func AllServices(client *ecs.Client, tagKeyOrEmpty string) (list []types.Service, err error) {
 	ctx := context.Background()
 
 	var clusterToken *string
@@ -42,7 +42,16 @@ func AllServices(client *ecs.Client) (list []types.Service, err error) {
 				if err2 != nil {
 					return list, err2
 				}
-				list = append(list, allInfos.Services...)
+				// filter on tagKey if set
+				for _, eachService := range allInfos.Services {
+					if tagKeyOrEmpty != "" {
+						if ServiceHasTagKey(eachService, tagKeyOrEmpty) {
+							list = append(list, eachService)
+						}
+					} else {
+						list = append(list, eachService)
+					}
+				}
 				taskToken = allServices.NextToken
 				if taskToken == nil {
 					break
@@ -56,6 +65,7 @@ func AllServices(client *ecs.Client) (list []types.Service, err error) {
 	}
 	return
 }
+
 func AllTasks(client *ecs.Client) (list []types.Task, err error) {
 	ctx := context.Background()
 
@@ -121,6 +131,17 @@ func NameOfService(service types.Service) string {
 		}
 	}
 	return ""
+}
+
+func ServiceHasTagKey(service types.Service, tagKey string) bool {
+	for _, each := range service.Tags {
+		if each.Key != nil && *each.Key == tagKey {
+			if each.Value != nil {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func TaskForService(client *ecs.Client, service types.Service) ([]types.Task, error) {

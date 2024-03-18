@@ -6,7 +6,6 @@ import (
 	"flag"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -21,10 +20,11 @@ func main() {
 	flag.Parse()
 
 	if len(os.Args) > 1 && os.Args[1] == "apply" {
+		slog.SetDefault(slog.With("exec", "APPLY"))
 		slog.Info("apply state changes")
 		dryRun = false
 	} else {
-		slog.Info("show planned state changes")
+		slog.SetDefault(slog.With("exec", "PLAN"))
 	}
 
 	data, err := os.ReadFile(*servicesInput)
@@ -55,31 +55,39 @@ func main() {
 		slog.Error("config fail", "err", err)
 		return
 	}
-	now := time.Now()
+	// now := time.Now()
 	client := ecs.NewFromConfig(cfg)
-	for _, each := range plans {
-		event, ok := wp.LastScheduledEventAt(each.Service, now)
-		if ok {
-			isRunning := mac.IsServiceRunning(client, each.Service)
-			if event.DesiredState != mac.Running && isRunning {
-				slog.Info("service is running but must be stopped", "name", each.Service.Name())
-				if dryRun {
-					continue
-				}
-				if err := mac.StopService(client, each.Service); err != nil {
-					slog.Error("failed to stop service", "err", err, "name", each.Service.Name())
-				}
-			}
-			if event.DesiredState == mac.Running && !isRunning {
-				slog.Info("service has stopped but must be running", "name", each.Service.Name())
-				if dryRun {
-					continue
-				}
-				if err := mac.StartService(client, each.Service); err != nil {
-					slog.Error("failed to start service", "err", err, "name", each.Service.Name())
-				}
-			}
-		}
+	// for _, each := range plans {
+	// 	event, ok := wp.LastScheduledEventAt(each.Service, now)
+	// 	if ok {
+	// 		isRunning := mac.IsServiceRunning(client, each.Service)
+	// 		if event.DesiredState != mac.Running && isRunning {
+	// 			slog.Info("service is running but must be stopped", "name", each.Service.Name())
+	// 			if dryRun {
+	// 				continue
+	// 			}
+	// 			if err := mac.StopService(client, each.Service); err != nil {
+	// 				slog.Error("failed to stop service", "err", err, "name", each.Service.Name())
+	// 			}
+	// 		}
+	// 		if event.DesiredState == mac.Running && !isRunning {
+	// 			slog.Info("service has stopped but must be running", "name", each.Service.Name())
+	// 			if dryRun {
+	// 				continue
+	// 			}
+	// 			if err := mac.StartService(client, each.Service); err != nil {
+	// 				slog.Error("failed to start service", "err", err, "name", each.Service.Name())
+	// 			}
+	// 		}
+	// 	}
+	// }
+	list, err := mac.AllServices(client, "moneypenny")
+	if err != nil {
+		slog.Error("AllServices fail", "err", err)
+		return
+	}
+	for _, each := range list {
+		slog.Info("moneypenny controlled", "name", *each.ServiceName)
 	}
 }
 
