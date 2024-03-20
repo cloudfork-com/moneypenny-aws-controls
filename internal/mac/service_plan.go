@@ -8,7 +8,7 @@ import (
 
 type ServicePlan struct {
 	Service
-	TagValue     string         `json:"tag-value"`
+	TagValue     string         `json:"moneypenny-tag-value"`
 	StateChanges []*StateChange `json:"state-changes"`
 }
 type StateChange struct {
