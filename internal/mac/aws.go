@@ -33,6 +33,9 @@ func AllServices(client *ecs.Client, tagKeyOrEmpty string) (list []types.Service
 				if err1 != nil {
 					return list, err1
 				}
+				if len(allServices.ServiceArns) == 0 { // InvalidParameterException: Services cannot be empty
+					return list, nil
+				}
 				slog.Info("describing services", "cluster", eachCluster, "tasks.count", len(allServices.ServiceArns))
 				allInfos, err2 := client.DescribeServices(context.TODO(), &ecs.DescribeServicesInput{ // TODO paging
 					Cluster:  aws.String(eachCluster),
@@ -144,6 +147,17 @@ func ServiceHasTagKey(service types.Service, tagKey string) bool {
 	return false
 }
 
+func TagValue(service types.Service, tagKey string) string {
+	for _, each := range service.Tags {
+		if each.Key != nil && *each.Key == tagKey {
+			if each.Value != nil {
+				return *each.Value
+			}
+		}
+	}
+	return ""
+}
+
 func TaskForService(client *ecs.Client, service types.Service) ([]types.Task, error) {
 	slog.Info("collecting tasks", "service", *service.ServiceName)
 	ctx := context.Background()
@@ -242,13 +256,13 @@ func StopService(client *ecs.Client, service Service) error {
 	return nil
 }
 
-func IsServiceRunning(client *ecs.Client, service Service) bool {
+func ServiceStatus(client *ecs.Client, service Service) string {
 	// at least one task must be running
 	tasks, _ := TasksForService(client, service.ClusterARN(), service.Name())
 	for _, each := range tasks {
-		if each.LastStatus != nil && *each.LastStatus == Running {
-			return true
+		if each.LastStatus != nil {
+			return *each.LastStatus
 		}
 	}
-	return false
+	return "UNKNOWN"
 }

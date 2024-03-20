@@ -8,6 +8,7 @@ import (
 
 type ServicePlan struct {
 	Service
+	TagValue     string         `json:"tag-value"`
 	StateChanges []*StateChange `json:"state-changes"`
 }
 type StateChange struct {
@@ -21,6 +22,14 @@ func (s StateChange) String() string {
 }
 
 func (t *ServicePlan) Validate() error {
+	if t.TagValue != "" {
+		chgs, err := ParseStateChanges(t.TagValue)
+		if err != nil {
+			return err
+		}
+		t.StateChanges = chgs
+		return nil
+	}
 	for _, each := range t.StateChanges {
 		spec, err := ParseCronSpec(each.Cron)
 		if err != nil {

@@ -1,13 +1,4 @@
 {
     "service-arn": "arn:aws:ecs:eu-central-1:00000:service/cluster/test",
-    "state-changes": [
-        {
-            "desired-state": "RUNNING",
-            "cron": "0 9 1-5"
-        },
-        {
-            "desired-state": "STOPPED",
-            "cron": "0 18 1-5"
-        }
-    ]
+    "tag-value": "running=0 9 1-5. stopped=0 18 1-5."
 }
