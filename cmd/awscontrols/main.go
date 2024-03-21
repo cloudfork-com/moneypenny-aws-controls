@@ -90,6 +90,10 @@ func main() {
 		event, ok := wp.LastScheduledEventAt(each.Service, now)
 		if ok {
 			lastStatus := mac.ServiceStatus(client, each.Service)
+			if lastStatus == mac.Unknown {
+				slog.Warn("service has unknown last status, it may not exist", "name", each.Service.Name())
+				continue
+			}
 			isRunning := lastStatus == mac.Running
 			if event.DesiredState != mac.Running && isRunning {
 				slog.Info("service is running but must be stopped", "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)

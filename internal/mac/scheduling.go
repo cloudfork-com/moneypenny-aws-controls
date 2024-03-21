@@ -9,6 +9,7 @@ import (
 
 const Running = "RUNNING"
 const Stopped = "STOPPED"
+const Unknown = "UNKNOWN"
 
 // ECS service
 type Service struct {
