@@ -20,9 +20,19 @@ Service to schedule ECS tasks.
 
 Using a tag with key `moneypenny`, you can specify the cron expressions for both `running` and `stopped` states.
 
-Example:
+To run a service between 08:00 and 18:00 on workdays (1=Monday,5=Friday), use:
 ```
 running=0 8 1-5. stopped=0 18 1-5.
+```
+
+To stop a service indefinitely, use:
+```
+stopped=0 0 0-6.
+```
+
+To run a service indefinitely either remove or empty the tag or use:
+```
+running=0 0 0-6.
 ```
 
 ### Local config

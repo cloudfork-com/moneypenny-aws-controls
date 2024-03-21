@@ -66,7 +66,7 @@ func main() {
 		sp := new(mac.ServicePlan)
 		sp.ARN = *each.ServiceArn
 		input := mac.TagValue(each, "moneypenny")
-		slog.Info("adding service plan", "service", *each.ServiceArn, "cron", input)
+		slog.Info("adding service plan", "service", *each.ServiceArn, "crons", input)
 		if input == "" {
 			slog.Warn("invalid moneypenny tag value", "value", input, "err", err)
 			continue
@@ -84,28 +84,31 @@ func main() {
 
 	now := time.Now()
 	for _, each := range plans {
+		if each.Disabled {
+			continue
+		}
 		event, ok := wp.LastScheduledEventAt(each.Service, now)
 		if ok {
 			lastStatus := mac.ServiceStatus(client, each.Service)
 			isRunning := lastStatus == mac.Running
 			if event.DesiredState != mac.Running && isRunning {
-				slog.Info("service is running but must be stopped", "name", each.Service.Name(), "state", lastStatus, "cron", each.TagValue)
+				slog.Info("service is running but must be stopped", "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
 				if dryRun {
 					continue
 				}
 				if err := mac.StopService(client, each.Service); err != nil {
-					slog.Error("failed to stop service", "err", err, "name", each.Service.Name(), "state", lastStatus, "cron", each.TagValue)
+					slog.Error("failed to stop service", "err", err, "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
 				}
 			} else if event.DesiredState == mac.Running && !isRunning {
-				slog.Info("service must be running", "name", each.Service.Name(), "state", lastStatus, "cron", each.TagValue)
+				slog.Info("service must be running", "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
 				if dryRun {
 					continue
 				}
 				if err := mac.StartService(client, each.Service); err != nil {
-					slog.Error("failed to start service", "err", err, "name", each.Service.Name(), "state", lastStatus, "cron", each.TagValue)
+					slog.Error("failed to start service", "err", err, "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
 				}
 			} else {
-				slog.Info("service is in expected state", "name", each.Service.Name(), "state", event.DesiredState, "cron", each.TagValue)
+				slog.Info("service is in expected state", "name", each.Service.Name(), "state", event.DesiredState, "crons", each.TagValue)
 			}
 		}
 	}

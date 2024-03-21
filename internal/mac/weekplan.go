@@ -1,6 +1,7 @@
 package mac
 
 import (
+	"log/slog"
 	"slices"
 	"time"
 )
@@ -10,6 +11,10 @@ type WeekPlan struct {
 }
 
 func (w *WeekPlan) AddServicePlan(p ServicePlan) {
+	if p.Disabled {
+		slog.Warn("service plan disabled", "service", p.ARN)
+		return
+	}
 	for _, each := range p.StateChanges {
 		for _, day := range each.CronSpec.DaysOfWeek {
 			w.planOfDay(day).AddStateChange(p.Service, each)
@@ -83,13 +88,13 @@ func witHourMinute(t time.Time, hour, minute int) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), hour, minute, 0, 0, t.Location())
 }
 
-func (w WeekPlan) LastScheduledEventAt(task Service, when time.Time) (ScheduledEvent, bool) {
+func (w WeekPlan) LastScheduledEventAt(service Service, when time.Time) (ScheduledEvent, bool) {
 	wkd := when.Weekday()
 	event := ScheduledEvent{}
 	for _, dp := range w.Plans {
 		if dp.Weekday == wkd {
 			for _, tp := range dp.Plans {
-				if tp.ARN == task.ARN {
+				if tp.ARN == service.ARN {
 					changeAt := time.Date(when.Year(), when.Month(), when.Day(), tp.Hour, tp.Minute, 0, 0, when.Location())
 					if changeAt.Before(when) && changeAt.After(event.At) {
 						event.At = changeAt

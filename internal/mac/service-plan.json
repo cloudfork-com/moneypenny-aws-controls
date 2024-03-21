@@ -1,4 +1,5 @@
 {
     "service-arn": "arn:aws:ecs:eu-central-1:00000:service/cluster/test",
-    "moneypenny-tag-value": "running=0 9 1-5. stopped=0 18 1-5."
+    "moneypenny-tag-value": "running=0 9 1-5. stopped=0 18 1-5.",
+    "disabled": true
 }

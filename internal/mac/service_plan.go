@@ -10,6 +10,7 @@ type ServicePlan struct {
 	Service
 	TagValue     string         `json:"moneypenny-tag-value"`
 	StateChanges []*StateChange `json:"state-changes"`
+	Disabled     bool           `json:"disabled"`
 }
 type StateChange struct {
 	DesiredState string `json:"desired-state"`
