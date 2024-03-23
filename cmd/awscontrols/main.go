@@ -11,15 +11,20 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/cloudfork-com/moneypenny-aws-controls/internal/mac"
+	"github.com/lmittmann/tint"
 )
 
 var servicesInput = flag.String("services", "", "description of service schedules")
 
 var dryRun = true
 
+var serviceTagName = "moneypenny"
+
 func main() {
 	flag.Parse()
+	setupLog()
 
 	if len(os.Args) > 1 && slices.Contains(os.Args, "apply") {
 		slog.SetDefault(slog.With("exec", "APPLY"))
@@ -64,15 +69,18 @@ func main() {
 	}
 	client := ecs.NewFromConfig(cfg)
 
-	list, err := mac.AllServices(client, "moneypenny")
+	allServices, err := mac.AllServices(client)
 	if err != nil {
 		slog.Error("AllServices fail", "err", err)
 		return
 	}
-	for _, each := range list {
+	for _, each := range allServices {
+		input := mac.TagValue(each, serviceTagName)
+		if input == "" {
+			continue
+		}
 		sp := new(mac.ServicePlan)
 		sp.ARN = *each.ServiceArn
-		input := mac.TagValue(each, "moneypenny")
 		slog.Info("adding service plan", "service", *each.ServiceArn, "crons", input)
 		if input == "" {
 			slog.Warn("invalid moneypenny tag value", "value", input, "err", err)
@@ -99,8 +107,16 @@ func main() {
 		if ok {
 			lastStatus := mac.ServiceStatus(client, each.Service)
 			if lastStatus == mac.Unknown {
-				slog.Warn("service has unknown last status, it may not exist", "name", each.Service.Name())
-				continue
+				exitsInCluster := slices.ContainsFunc(allServices, func(existing types.Service) bool {
+					return *existing.ServiceArn == each.ARN
+				})
+				if exitsInCluster {
+					slog.Warn("service has unknown last status, assume it is stopped", "name", each.Service.Name())
+					lastStatus = mac.Stopped
+				} else {
+					slog.Warn("service does not exist, update your configuration", "name", each.Service.Name())
+					continue
+				}
 			}
 			isRunning := lastStatus == mac.Running
 			if event.DesiredState != mac.Running && isRunning {
@@ -124,4 +140,14 @@ func main() {
 			}
 		}
 	}
+}
+
+func setupLog() {
+	// set global logger with custom options
+	slog.SetDefault(slog.New(
+		tint.NewHandler(os.Stderr, &tint.Options{
+			Level:      slog.LevelDebug,
+			TimeFormat: time.Kitchen,
+		}),
+	))
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 )
 
-func AllServices(client *ecs.Client, tagKeyOrEmpty string) (list []types.Service, err error) {
+func AllServices(client *ecs.Client) (list []types.Service, err error) {
 	ctx := context.Background()
 
 	var clusterToken *string
@@ -45,16 +45,7 @@ func AllServices(client *ecs.Client, tagKeyOrEmpty string) (list []types.Service
 				if err2 != nil {
 					return list, err2
 				}
-				// filter on tagKey if set
-				for _, eachService := range allInfos.Services {
-					if tagKeyOrEmpty != "" {
-						if ServiceHasTagKey(eachService, tagKeyOrEmpty) {
-							list = append(list, eachService)
-						}
-					} else {
-						list = append(list, eachService)
-					}
-				}
+				list = append(list, allInfos.Services...)
 				taskToken = allServices.NextToken
 				if taskToken == nil {
 					break
