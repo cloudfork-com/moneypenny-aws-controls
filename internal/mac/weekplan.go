@@ -92,18 +92,17 @@ func (w WeekPlan) LastScheduledEventAt(service Service, when time.Time) (Schedul
 	wkd := when.Weekday()
 	event := ScheduledEvent{}
 	for _, dp := range w.Plans {
-		if dp.Weekday == wkd {
-			for _, tp := range dp.Plans {
-				if tp.ARN == service.ARN {
-					changeAt := time.Date(when.Year(), when.Month(), when.Day(), tp.Hour, tp.Minute, 0, 0, when.Location())
-					if changeAt.Before(when) && changeAt.After(event.At) {
-						event.At = changeAt
-						event.Service = tp.Service
-						event.DesiredState = tp.DesiredState
-					}
-					if changeAt.After(when) {
-						return event, true
-					}
+		for _, tp := range dp.Plans {
+			if tp.ARN == service.ARN {
+				changeAt := time.Date(when.Year(), when.Month(), when.Day(), tp.Hour, tp.Minute, 0, 0, when.Location())
+				changeAt = changeAt.Add(time.Duration(dp.Weekday-wkd) * 24 * time.Hour)
+				if changeAt.Before(when) && changeAt.After(event.At) {
+					event.At = changeAt
+					event.Service = tp.Service
+					event.DesiredState = tp.DesiredState
+				}
+				if changeAt.After(when) {
+					return event, true
 				}
 			}
 		}

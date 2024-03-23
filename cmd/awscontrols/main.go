@@ -6,6 +6,7 @@ import (
 	"flag"
 	"log/slog"
 	"os"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -13,42 +14,48 @@ import (
 	"github.com/cloudfork-com/moneypenny-aws-controls/internal/mac"
 )
 
-var servicesInput = flag.String("services", "aws-service-plans.json", "description of service schedules")
+var servicesInput = flag.String("services", "", "description of service schedules")
 
 var dryRun = true
 
 func main() {
 	flag.Parse()
 
-	if len(os.Args) > 1 && os.Args[1] == "apply" {
+	if len(os.Args) > 1 && slices.Contains(os.Args, "apply") {
 		slog.SetDefault(slog.With("exec", "APPLY"))
 		dryRun = false
 	} else {
 		slog.SetDefault(slog.With("exec", "PLAN"))
 	}
 
-	data, err := os.ReadFile(*servicesInput)
-	if err != nil {
-		slog.Error("read fail", "err", err)
-		return
-	}
-	plans := []*mac.ServicePlan{}
-	err = json.Unmarshal(data, &plans)
-	if err != nil {
-		slog.Error("parse fail", "err", err)
-		return
-	}
-	for _, each := range plans {
-		if err := each.Validate(); err != nil {
-			slog.Error("validate fail", "err", err)
-			return
-		}
-	}
 	// build weekplan
 	wp := new(mac.WeekPlan)
-	for _, each := range plans {
-		wp.AddServicePlan(*each)
+	plans := []*mac.ServicePlan{}
+
+	if len(*servicesInput) == 0 {
+		slog.Info("no local service plans")
+	} else {
+		slog.Info("reading service plans", "file", *servicesInput)
+		data, err := os.ReadFile(*servicesInput)
+		if err != nil {
+			slog.Error("read fail", "err", err)
+			return
+		}
+		err = json.Unmarshal(data, &plans)
+		if err != nil {
+			slog.Error("parse fail", "err", err)
+			return
+		}
+		for _, each := range plans {
+			if err := each.Validate(); err != nil {
+				slog.Error("validate fail", "err", err)
+				return
+			}
+			slog.Info("adding service plan", "service", each.ARN, "disabled", each.Disabled)
+			wp.AddServicePlan(*each)
+		}
 	}
+
 	// Load the Shared AWS Configuration (~/.aws/config)
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
@@ -85,6 +92,7 @@ func main() {
 	now := time.Now()
 	for _, each := range plans {
 		if each.Disabled {
+			slog.Warn("disabled plan", "service", each.ARN)
 			continue
 		}
 		event, ok := wp.LastScheduledEventAt(each.Service, now)

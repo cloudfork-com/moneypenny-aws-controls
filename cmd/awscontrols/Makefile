@@ -1,5 +1,5 @@
 plan:
-	AWS_PROFILE=realm-europe-prod go run *.go
+	AWS_PROFILE=realm-europe-prod go run *.go -services aws-service-plans.json
 
 apply:
-	AWS_PROFILE=realm-europe-prod go run *.go apply
+	AWS_PROFILE=realm-europe-prod go run *.go -services aws-service-plans.json apply
