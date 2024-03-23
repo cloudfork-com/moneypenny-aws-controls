@@ -22,6 +22,16 @@ func (s StateChange) String() string {
 	return fmt.Sprintf("%s=%s.", s.DesiredState, s.Cron)
 }
 
+func (s *StateChange) Equals(other *StateChange) bool {
+	if s == other {
+		return true
+	}
+	if s.DesiredState != other.DesiredState {
+		return false
+	}
+	return s.Cron != other.Cron
+}
+
 func (t *ServicePlan) Validate() error {
 	if t.TagValue != "" {
 		chgs, err := ParseStateChanges(t.TagValue)

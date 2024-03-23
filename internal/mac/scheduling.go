@@ -43,6 +43,12 @@ type DayPlan struct {
 }
 
 func (d *DayPlan) AddStateChange(service Service, change *StateChange) {
+	// deduplicate
+	for _, each := range d.Plans {
+		if each.ARN == service.ARN && each.DesiredState == change.DesiredState && each.Hour == change.CronSpec.Hour && each.Minute == change.CronSpec.Minute {
+			return
+		}
+	}
 	d.Plans = append(d.Plans, TimePlan{
 		Service:      service,
 		Hour:         change.CronSpec.Hour,

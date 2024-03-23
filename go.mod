@@ -6,6 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.50.36
 	github.com/aws/aws-sdk-go-v2/config v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.2
+	github.com/emicklei/tre v1.5.0
 	github.com/lmittmann/tint v1.0.4
 )
 

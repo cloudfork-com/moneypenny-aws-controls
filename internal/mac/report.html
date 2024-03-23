@@ -1,0 +1,36 @@
+<html>
+<style>
+    .red {
+        background-color: #ecc9c9;
+    }
+
+    .green {
+        background-color: #6fc276;
+    }
+</style>
+
+<body>
+    {{ range .Days }}
+    <h2>{{.Name}}</h2>
+    <table>
+        <tr>
+            <th>Time</th>
+            <th>Desired State</th>
+            <th>Service</th>
+            <th>Cluster</th>
+        </tr>
+        {{ range .Times }}
+        <tr class="{{.RowClass}}">
+            <td>{{twoDigits .Plan.Hour}}:{{twoDigits .Plan.Minute}}</td>
+            <td>{{.Plan.DesiredState}}</td>
+            <td>{{.ServiceName}}
+            </td>
+            <td>{{.ClusterARN}}</td>
+            </td>
+        </tr>
+        {{ end }}
+    </table>
+    {{ end }}
+</body>
+
+</html>
