@@ -28,14 +28,17 @@ type PlanExecutor struct {
 
 func NewPlanExecutor(localPlanFilename string, profile string) (*PlanExecutor, error) {
 	p := &PlanExecutor{configFile: localPlanFilename, weekPlan: new(WeekPlan), dryRun: true, profile: profile, clog: slog.Default()}
-	p.loadServicePlans()
-	p.createECSClient()
+	if err := p.loadServicePlans(); err != nil {
+		return nil, err
+	}
+	if err := p.createECSClient(); err != nil {
+		return nil, err
+	}
 	return p, nil
 }
 
 func (p *PlanExecutor) Plan() error {
 	p.clog = slog.With("exec", "PLAN", "profile", p.profile)
-	p.dryRun = true
 	return p.exec()
 }
 func (p *PlanExecutor) Apply() error {
@@ -63,7 +66,7 @@ func (p *PlanExecutor) Report() error {
 	defer rout.Close()
 	p.clog.Info("write schedule")
 	rep := Reporter{}
-	if err := rep.WriteOn(p.weekPlan, rout); err != nil {
+	if err := rep.WriteOn(p.profile, p.weekPlan, rout); err != nil {
 		p.clog.Error("schedule report failed", "err", err)
 		return err
 	}

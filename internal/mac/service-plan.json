@@ -2,5 +2,6 @@
     "profile": "realm-test",
     "service-arn": "arn:aws:ecs:eu-central-1:00000:service/cluster/test",
     "moneypenny": "running=0 9 1-5. stopped=0 18 1-5.",
+    "desired-tasks-count": 2,
     "disabled": true
 }

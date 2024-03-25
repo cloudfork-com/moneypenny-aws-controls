@@ -18,7 +18,7 @@ var reportHTML string
 type Reporter struct {
 }
 
-func (r Reporter) WriteOn(wp *WeekPlan, w io.Writer) error {
+func (r Reporter) WriteOn(profile string, wp *WeekPlan, w io.Writer) error {
 	tmpl := template.New("report")
 	tmpl = tmpl.Funcs(template.FuncMap{
 		"twoDigits": func(i int) string {
@@ -33,7 +33,7 @@ func (r Reporter) WriteOn(wp *WeekPlan, w io.Writer) error {
 	if err != nil {
 		return tre.New(err, "parse template fail")
 	}
-	wd := WeekData{}
+	wd := WeekData{Profile: profile}
 	for d := 0; d < 7; d++ {
 		dd := DayData{}
 		day := time.Weekday(d)
@@ -65,7 +65,8 @@ func (r Reporter) WriteOn(wp *WeekPlan, w io.Writer) error {
 }
 
 type WeekData struct {
-	Days []DayData
+	Profile string
+	Days    []DayData
 }
 type DayData struct {
 	Name      string
