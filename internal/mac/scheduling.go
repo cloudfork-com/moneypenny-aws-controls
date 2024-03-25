@@ -54,6 +54,7 @@ func (d *DayPlan) AddStateChange(service Service, change *StateChange) {
 		Hour:         change.CronSpec.Hour,
 		Minute:       change.CronSpec.Minute,
 		DesiredState: change.DesiredState,
+		cron:         change.Cron,
 	})
 }
 
@@ -62,6 +63,7 @@ type TimePlan struct {
 	DesiredState string `json:"desired-state"`
 	Hour         int    `json:"hour"` // 24
 	Minute       int    `json:"minute"`
+	cron         string // what was used to create this
 }
 
 func (t TimePlan) String() string {

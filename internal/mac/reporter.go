@@ -36,11 +36,14 @@ func (r Reporter) WriteOn(wp *WeekPlan, w io.Writer) error {
 	for d := 0; d < 7; d++ {
 		dd := DayData{}
 		day := time.Weekday(d)
+		dd.DayNumber = int(day)
 		dd.Name = day.String()
 		for _, tp := range wp.ScheduleForDay(day) {
 			td := TimeData{}
 			td.Plan = tp
+			td.Cron = "?"
 			td.RowClass = "red"
+			td.Cron = tp.cron
 			if tp.DesiredState == Running {
 				td.RowClass = "green"
 			}
@@ -58,12 +61,14 @@ type WeekData struct {
 	Days []DayData
 }
 type DayData struct {
-	Name  string
-	Times []TimeData
+	Name      string
+	DayNumber int
+	Times     []TimeData
 }
 type TimeData struct {
 	RowClass    string
 	Plan        TimePlan
 	ServiceName string
 	ClusterARN  string
+	Cron        string
 }
