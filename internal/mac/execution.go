@@ -45,10 +45,18 @@ func (p *PlanExecutor) Report() error {
 	slog.SetDefault(slog.With("exec", "REPORT"))
 
 	// collect plans from tagges services
-	_, err := p.fetchAllServices()
+	allServices, err := p.fetchAllServices()
 	if err != nil {
 		return err
 	}
+
+	// check existence
+	p.wp.TimePlansDo(func(tp *TimePlan) {
+		exitsInCluster := slices.ContainsFunc(allServices, func(existing types.Service) bool {
+			return *existing.ServiceArn == tp.ARN
+		})
+		tp.doesNotExist = !exitsInCluster
+	})
 
 	rout, _ := os.Create("schedule.html")
 	defer rout.Close()

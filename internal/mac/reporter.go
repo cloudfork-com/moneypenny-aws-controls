@@ -40,20 +40,23 @@ func (r Reporter) WriteOn(wp *WeekPlan, w io.Writer) error {
 		dd.Name = day.String()
 		for _, tp := range wp.ScheduleForDay(day) {
 			td := TimeData{}
-			td.Plan = tp
-			td.Cron = "?"
-			td.RowClass = "red"
-			td.Cron = tp.cron
-			if tp.DesiredState == Running {
-				td.RowClass = "green"
-			}
 			td.ClusterARN = tp.ClusterARN()
 			td.ServiceName = tp.Name()
+			td.Plan = tp
+			td.Cron = "?"
+			td.RowClass = "stopped"
+			td.Cron = tp.cron
+			if tp.DesiredState == Running {
+				td.RowClass = "running"
+			}
+			if tp.doesNotExist {
+				td.RowClass = "absent"
+				td.ServiceName = "MISSING: " + td.ServiceName
+			}
 			dd.Times = append(dd.Times, td)
 		}
 		wd.Days = append(wd.Days, dd)
 	}
-
 	return tre.New(tmpl.Execute(w, wd), "template exec fail")
 }
 
@@ -67,7 +70,7 @@ type DayData struct {
 }
 type TimeData struct {
 	RowClass    string
-	Plan        TimePlan
+	Plan        *TimePlan
 	ServiceName string
 	ClusterARN  string
 	Cron        string

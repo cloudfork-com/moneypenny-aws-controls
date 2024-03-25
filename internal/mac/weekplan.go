@@ -22,6 +22,14 @@ func (w *WeekPlan) AddServicePlan(p ServicePlan) {
 	}
 }
 
+func (w *WeekPlan) TimePlansDo(block func(tp *TimePlan)) {
+	for _, each := range w.Plans {
+		for _, other := range each.Plans {
+			block(other)
+		}
+	}
+}
+
 func (w *WeekPlan) planOfDay(weekday time.Weekday) *DayPlan {
 	for _, each := range w.Plans {
 		if each.Weekday == weekday {
@@ -34,7 +42,7 @@ func (w *WeekPlan) planOfDay(weekday time.Weekday) *DayPlan {
 }
 
 // ordered list of statechanges on a particular weekday
-func (w *WeekPlan) ScheduleForDay(weekday time.Weekday) (list []TimePlan) {
+func (w *WeekPlan) ScheduleForDay(weekday time.Weekday) (list []*TimePlan) {
 	var dp *DayPlan
 	for _, each := range w.Plans {
 		if each.Weekday == weekday {
@@ -48,7 +56,7 @@ func (w *WeekPlan) ScheduleForDay(weekday time.Weekday) (list []TimePlan) {
 	for _, each := range dp.Plans {
 		list = append(list, each)
 	}
-	slices.SortFunc(list, func(s1, s2 TimePlan) int {
+	slices.SortFunc(list, func(s1, s2 *TimePlan) int {
 		return intCompare(s1.Hour*60+s1.Minute, s2.Hour*60+s2.Minute)
 	})
 	return

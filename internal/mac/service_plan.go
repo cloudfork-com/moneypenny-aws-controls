@@ -18,7 +18,7 @@ type StateChange struct {
 	CronSpec     CronSpec
 }
 
-func (s StateChange) String() string {
+func (s *StateChange) String() string {
 	return fmt.Sprintf("%s=%s.", s.DesiredState, s.Cron)
 }
 

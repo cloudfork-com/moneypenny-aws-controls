@@ -39,7 +39,7 @@ func (s ScheduledEvent) String() string {
 
 type DayPlan struct {
 	Weekday time.Weekday `json:"weekday"` // 0=Sunday, 1=Monday, ...
-	Plans   []TimePlan   `json:"plans"`
+	Plans   []*TimePlan  `json:"plans"`
 }
 
 func (d *DayPlan) AddStateChange(service Service, change *StateChange) {
@@ -49,7 +49,7 @@ func (d *DayPlan) AddStateChange(service Service, change *StateChange) {
 			return
 		}
 	}
-	d.Plans = append(d.Plans, TimePlan{
+	d.Plans = append(d.Plans, &TimePlan{
 		Service:      service,
 		Hour:         change.CronSpec.Hour,
 		Minute:       change.CronSpec.Minute,
@@ -64,6 +64,7 @@ type TimePlan struct {
 	Hour         int    `json:"hour"` // 24
 	Minute       int    `json:"minute"`
 	cron         string // what was used to create this
+	doesNotExist bool   // verified with AWS, for reporting
 }
 
 func (t TimePlan) String() string {
