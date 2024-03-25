@@ -1,6 +1,7 @@
 package mac
 
 import (
+	"fmt"
 	"html/template"
 	"io"
 	"strconv"
@@ -36,6 +37,9 @@ func (r Reporter) WriteOn(wp *WeekPlan, w io.Writer) error {
 	for d := 0; d < 7; d++ {
 		dd := DayData{}
 		day := time.Weekday(d)
+		if now := time.Now(); now.Weekday() == day {
+			dd.Today = fmt.Sprintf("is today, %s", now.Format(time.DateOnly))
+		}
 		dd.DayNumber = int(day)
 		dd.Name = day.String()
 		for _, tp := range wp.ScheduleForDay(day) {
@@ -66,6 +70,7 @@ type WeekData struct {
 type DayData struct {
 	Name      string
 	DayNumber int
+	Today     string
 	Times     []TimeData
 }
 type TimeData struct {

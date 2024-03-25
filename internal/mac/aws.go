@@ -3,25 +3,44 @@ package mac
 import (
 	"context"
 	"log/slog"
-	"os"
+	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/aws/aws-sdk-go/aws"
+	"gopkg.in/ini.v1"
 )
 
-func AllServices(client *ecs.Client) (list []types.Service, err error) {
+func GetLocalAwsProfiles() (list []string) {
+	fname := config.DefaultSharedConfigFilename() // Get aws.config default shared configuration file name
+	f, err := ini.Load(fname)                     // Load ini file
+	if err != nil {
+		return
+	}
+	for _, v := range f.Sections() {
+		if len(v.Keys()) != 0 { // Get only the sections having Keys
+			parts := strings.Split(v.Name(), " ")
+			if len(parts) == 2 && parts[0] == "profile" { // skip default
+				list = append(list, parts[1])
+			}
+		}
+	}
+	return
+}
+
+func AllServices(clog *slog.Logger, client *ecs.Client) (list []types.Service, err error) {
 	ctx := context.Background()
 
 	var clusterToken *string
 	for {
-		slog.Info("collecting clusters", "profile", os.Getenv("AWS_PROFILE"))
+		clog.Info("collecting clusters")
 		allClusters, err0 := client.ListClusters(ctx, &ecs.ListClustersInput{NextToken: clusterToken})
 		if err0 != nil {
 			return list, err0
 		}
 		for _, eachCluster := range allClusters.ClusterArns {
-			slog.Info("collecting services", "cluster", eachCluster)
+			clog.Info("collecting services", "cluster", eachCluster)
 			var taskToken *string
 			for {
 				allServices, err1 := client.ListServices(context.TODO(), &ecs.ListServicesInput{
@@ -36,7 +55,7 @@ func AllServices(client *ecs.Client) (list []types.Service, err error) {
 				if len(allServices.ServiceArns) == 0 { // InvalidParameterException: Services cannot be empty
 					return list, nil
 				}
-				slog.Info("describing services", "cluster", eachCluster, "services.count", len(allServices.ServiceArns))
+				clog.Info("describing services", "cluster", eachCluster, "services.count", len(allServices.ServiceArns))
 				allInfos, err2 := client.DescribeServices(context.TODO(), &ecs.DescribeServicesInput{ // TODO paging
 					Cluster:  aws.String(eachCluster),
 					Services: allServices.ServiceArns,
@@ -103,8 +122,8 @@ func TagValue(service types.Service, tagKey string) string {
 	return ""
 }
 
-func TasksForService(client *ecs.Client, clusterARN, shortServiceName string) ([]types.Task, error) {
-	slog.Info("collecting tasks", "service", shortServiceName)
+func TasksForService(clog *slog.Logger, client *ecs.Client, clusterARN, shortServiceName string) ([]types.Task, error) {
+	clog.Info("collecting tasks", "service", shortServiceName)
 	ctx := context.Background()
 	taskList, err := client.ListTasks(ctx, &ecs.ListTasksInput{
 		Cluster:     aws.String(clusterARN),
@@ -124,18 +143,8 @@ func TasksForService(client *ecs.Client, clusterARN, shortServiceName string) ([
 	return allInfos.Tasks, nil
 }
 
-func StartTask(client *ecs.Client, service Service, task types.Task) error {
-	slog.Info("starting task", "arn", *task.TaskDefinitionArn)
-	_, err := client.StartTask(context.Background(), &ecs.StartTaskInput{
-		ContainerInstances: []string{*task.ContainerInstanceArn},
-		TaskDefinition:     task.TaskDefinitionArn,
-		Cluster:            task.ClusterArn,
-	})
-	return err
-}
-
-func StopTask(client *ecs.Client, task types.Task) error {
-	slog.Info("stopping task", "arn", *task.TaskArn)
+func StopTask(clog *slog.Logger, client *ecs.Client, task types.Task) error {
+	clog.Info("stopping task", "arn", *task.TaskArn)
 	_, err := client.StopTask(context.Background(), &ecs.StopTaskInput{
 		Task:    task.TaskArn,
 		Cluster: task.ClusterArn,
@@ -144,8 +153,8 @@ func StopTask(client *ecs.Client, task types.Task) error {
 	return err
 }
 
-func StartService(client *ecs.Client, service Service) error {
-	slog.Info("starting service", "arn", service.ARN)
+func StartService(clog *slog.Logger, client *ecs.Client, service Service) error {
+	clog.Info("starting service", "arn", service.ARN)
 	count := int32(service.DesiredTasksCount)
 	if count == 0 { //unspecified
 		count = 1
@@ -158,8 +167,8 @@ func StartService(client *ecs.Client, service Service) error {
 	return err
 }
 
-func StopService(client *ecs.Client, service Service) error {
-	slog.Info("stopping service", "arn", service.ARN)
+func StopService(clog *slog.Logger, client *ecs.Client, service Service) error {
+	clog.Info("stopping service", "arn", service.ARN)
 	_, err := client.UpdateService(context.Background(), &ecs.UpdateServiceInput{
 		Service:      aws.String(service.Name()),
 		DesiredCount: aws.Int32(0),
@@ -168,21 +177,21 @@ func StopService(client *ecs.Client, service Service) error {
 	if err != nil {
 		return err
 	}
-	all, err := TasksForService(client, service.ClusterARN(), service.Name())
+	all, err := TasksForService(clog, client, service.ClusterARN(), service.Name())
 	if err != nil {
 		return err
 	}
 	for _, each := range all {
-		if err := StopTask(client, each); err != nil {
+		if err := StopTask(clog, client, each); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func ServiceStatus(client *ecs.Client, service Service) string {
+func ServiceStatus(clog *slog.Logger, client *ecs.Client, service Service) string {
 	// at least one task must be running
-	tasks, _ := TasksForService(client, service.ClusterARN(), service.Name())
+	tasks, _ := TasksForService(clog, client, service.ClusterARN(), service.Name())
 	for _, each := range tasks {
 		if each.LastStatus != nil {
 			return *each.LastStatus

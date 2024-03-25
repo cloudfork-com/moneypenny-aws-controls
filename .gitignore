@@ -1,4 +1,4 @@
 cmd/awscontrols/aws-service-plans.json
 .vscode/launch.json
-cmd/awscontrols/schedule.html
-cmd/awscontrols/Makefiles
+cmd/awscontrols/*schedule.html
+cmd/awscontrols/Makefile

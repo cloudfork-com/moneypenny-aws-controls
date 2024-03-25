@@ -8,7 +8,8 @@ import (
 
 type ServicePlan struct {
 	Service
-	TagValue     string         `json:"moneypenny-tag-value"`
+	Profile      string         `json:"profile"`
+	TagValue     string         `json:"moneypenny"`
 	StateChanges []*StateChange `json:"state-changes"`
 	Disabled     bool           `json:"disabled"`
 }

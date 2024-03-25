@@ -17,19 +17,19 @@ func main() {
 	flag.Parse()
 	setupLog()
 
-	pe, err := mac.NewPlanExecutor(*servicesInput)
-	if err != nil {
-		return
-	}
-	if slices.Contains(os.Args, "apply") {
-		pe.Apply()
-		return
-	} else if slices.Contains(os.Args, "report") {
-		pe.Report()
-		return
-	} else {
-		pe.Plan()
-		return
+	for _, each := range mac.GetLocalAwsProfiles() {
+		pe, err := mac.NewPlanExecutor(*servicesInput, each)
+		if err != nil {
+			return
+		}
+		if slices.Contains(os.Args, "apply") {
+			pe.Apply()
+		} else if slices.Contains(os.Args, "report") {
+			pe.Report()
+		} else {
+			pe.Plan()
+
+		}
 	}
 }
 

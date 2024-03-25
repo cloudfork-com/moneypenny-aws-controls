@@ -12,13 +12,13 @@ func TestDayPlan(t *testing.T) {
 	task := Service{
 		ARN: "myservice",
 	}
-	tpOn := TimePlan{
+	tpOn := &TimePlan{
 		Service:      task,
 		DesiredState: Running,
 		Hour:         9,
 		Minute:       1,
 	}
-	tpOff := TimePlan{
+	tpOff := &TimePlan{
 		Service:      task,
 		DesiredState: Stopped,
 		Hour:         18,
@@ -26,7 +26,7 @@ func TestDayPlan(t *testing.T) {
 	}
 	dp := &DayPlan{
 		Weekday: 2,
-		Plans:   []TimePlan{tpOn, tpOff},
+		Plans:   []*TimePlan{tpOn, tpOff},
 	}
 	wp := WeekPlan{
 		Plans: []*DayPlan{dp},
