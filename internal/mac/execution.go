@@ -44,6 +44,12 @@ func (p *PlanExecutor) Apply() error {
 func (p *PlanExecutor) Report() error {
 	slog.SetDefault(slog.With("exec", "REPORT"))
 
+	// collect plans from tagges services
+	_, err := p.fetchAllServices()
+	if err != nil {
+		return err
+	}
+
 	rout, _ := os.Create("schedule.html")
 	defer rout.Close()
 	slog.Info("write schedule")
