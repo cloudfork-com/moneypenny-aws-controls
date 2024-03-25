@@ -152,7 +152,7 @@ func (p *PlanExecutor) exec() error {
 			}
 			isRunning := lastStatus == Running
 			if event.DesiredState != Running && isRunning {
-				slog.Info("service is running but must be stopped", "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
+				slog.Info("[CHANGE] service is running but must be stopped", "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
 				if p.dryRun {
 					continue
 				}
@@ -160,7 +160,7 @@ func (p *PlanExecutor) exec() error {
 					slog.Error("failed to stop service", "err", err, "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
 				}
 			} else if event.DesiredState == Running && !isRunning {
-				slog.Info("service must be running", "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
+				slog.Info("[CHANGE] service must be running", "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
 				if p.dryRun {
 					continue
 				}
