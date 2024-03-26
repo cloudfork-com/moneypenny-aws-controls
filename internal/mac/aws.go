@@ -55,7 +55,7 @@ func AllServices(clog *slog.Logger, client *ecs.Client) (list []types.Service, e
 				if len(allServices.ServiceArns) == 0 { // InvalidParameterException: Services cannot be empty
 					return list, nil
 				}
-				clog.Info("describing services", "cluster", eachCluster, "services.count", len(allServices.ServiceArns))
+				clog.Debug("describing services", "cluster", eachCluster, "services.count", len(allServices.ServiceArns))
 				allInfos, err2 := client.DescribeServices(context.TODO(), &ecs.DescribeServicesInput{ // TODO paging
 					Cluster:  aws.String(eachCluster),
 					Services: allServices.ServiceArns,

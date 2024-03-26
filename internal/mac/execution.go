@@ -94,7 +94,7 @@ func (p *PlanExecutor) loadServicePlans() error {
 				return err
 			}
 			if each.Profile == p.profile {
-				p.clog.Info("adding service plan", "service", each.ARN, "disabled", each.Disabled)
+				p.clog.Debug("adding service plan", "service", each.ARN, "disabled", each.Disabled)
 				p.weekPlan.AddServicePlan(*each)
 			}
 		}
@@ -125,7 +125,7 @@ func (p *PlanExecutor) fetchAllServices() ([]types.Service, error) {
 		}
 		sp := new(ServicePlan)
 		sp.ARN = *each.ServiceArn
-		p.clog.Info("adding service plan", "service", *each.ServiceArn, "crons", input)
+		p.clog.Debug("adding service plan", "service", *each.ServiceArn, "crons", input)
 		if input == "" {
 			p.clog.Warn("invalid moneypenny tag value", "value", input, "err", err)
 			continue

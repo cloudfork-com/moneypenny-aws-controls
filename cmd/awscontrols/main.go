@@ -13,11 +13,22 @@ import (
 
 var servicesInput = flag.String("services", "", "description of service schedules")
 
+var debugging = flag.Bool("debug", false, "if true then more logging")
+
+var profile = flag.String("profile", "", "run for a specific AWS profile. If empty then run for all known profiles")
+
 func main() {
 	flag.Parse()
 	setupLog()
 
-	for _, each := range mac.GetLocalAwsProfiles() {
+	// either one or all
+	profiles := []string{}
+	if *profile != "" {
+		profiles = append(profiles, *profile)
+	} else {
+		profiles = mac.GetLocalAwsProfiles()
+	}
+	for _, each := range profiles {
 		pe, err := mac.NewPlanExecutor(*servicesInput, each)
 		if err != nil {
 			return
@@ -35,9 +46,13 @@ func main() {
 
 func setupLog() {
 	// set global logger with custom options
+	lvl := slog.LevelInfo
+	if *debugging {
+		lvl = slog.LevelDebug
+	}
 	slog.SetDefault(slog.New(
 		tint.NewHandler(os.Stderr, &tint.Options{
-			Level:      slog.LevelDebug,
+			Level:      lvl,
 			TimeFormat: time.Kitchen,
 		}),
 	))
