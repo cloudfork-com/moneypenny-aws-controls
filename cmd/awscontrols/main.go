@@ -11,7 +11,7 @@ import (
 	"github.com/lmittmann/tint"
 )
 
-var servicesInput = flag.String("services", "", "description of service schedules")
+var plansInput = flag.String("plans", "", "description of service plans")
 
 var debugging = flag.Bool("debug", false, "if true then more logging")
 
@@ -29,7 +29,7 @@ func main() {
 		profiles = mac.GetLocalAwsProfiles()
 	}
 	for _, each := range profiles {
-		pe, err := mac.NewPlanExecutor(*servicesInput, each)
+		pe, err := mac.NewPlanExecutor(*plansInput, each)
 		if err != nil {
 			return
 		}
