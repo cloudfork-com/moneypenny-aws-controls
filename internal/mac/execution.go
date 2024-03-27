@@ -2,7 +2,6 @@ package mac
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -17,20 +16,18 @@ import (
 var serviceTagName = "moneypenny"
 
 type PlanExecutor struct {
-	configFile string
 	dryRun     bool
 	weekPlan   *WeekPlan
+	localPlans []*ServicePlan
 	plans      []*ServicePlan
 	client     *ecs.Client
 	profile    string
 	clog       *slog.Logger
 }
 
-func NewPlanExecutor(localPlanFilename string, profile string) (*PlanExecutor, error) {
-	p := &PlanExecutor{configFile: localPlanFilename, weekPlan: new(WeekPlan), dryRun: true, profile: profile, clog: slog.Default()}
-	if err := p.loadServicePlans(); err != nil {
-		return nil, err
-	}
+func NewPlanExecutor(localPlans []*ServicePlan, profile string) (*PlanExecutor, error) {
+	p := &PlanExecutor{weekPlan: new(WeekPlan), dryRun: true, profile: profile, clog: slog.Default(), localPlans: localPlans}
+	p.applyLocalPlans()
 	if err := p.createECSClient(); err != nil {
 		return nil, err
 	}
@@ -73,33 +70,13 @@ func (p *PlanExecutor) Report() error {
 	return nil
 }
 
-func (p *PlanExecutor) loadServicePlans() error {
-	if len(p.configFile) == 0 {
-		p.clog.Info("no local service plans")
-	} else {
-		p.clog.Info("reading service plans", "file", p.configFile)
-		data, err := os.ReadFile(p.configFile)
-		if err != nil {
-			p.clog.Error("read fail", "err", err)
-			return err
-		}
-		err = json.Unmarshal(data, &p.plans)
-		if err != nil {
-			p.clog.Error("parse fail", "err", err)
-			return err
-		}
-		for _, each := range p.plans {
-			if err := each.Validate(); err != nil {
-				p.clog.Error("validate fail", "err", err)
-				return err
-			}
-			if each.Profile == p.profile {
-				p.clog.Debug("adding service plan", "service", each.ARN, "disabled", each.Disabled)
-				p.weekPlan.AddServicePlan(*each)
-			}
+func (p *PlanExecutor) applyLocalPlans() {
+	for _, each := range p.localPlans {
+		if each.Profile == p.profile {
+			p.clog.Debug("adding local service plan", "service", each.ARN, "disabled", each.Disabled)
+			p.weekPlan.AddServicePlan(*each)
 		}
 	}
-	return nil
 }
 
 func (p *PlanExecutor) createECSClient() error {

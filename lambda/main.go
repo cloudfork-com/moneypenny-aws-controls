@@ -8,7 +8,7 @@ import (
 )
 
 type Command struct {
-	Name    string `json:"name"`    // plan,apply,report
+	Name    string `json:"command"` // plan,apply,report
 	Profile string `json:"profile"` // optionally for one AWS profile
 	Debug   bool   `json:"debug"`   // default is false
 }

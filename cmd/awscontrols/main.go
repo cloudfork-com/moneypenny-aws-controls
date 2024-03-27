@@ -28,8 +28,12 @@ func main() {
 	} else {
 		profiles = mac.GetLocalAwsProfiles()
 	}
+	loader := mac.NewPlanLoader(*plansInput)
+	if err := loader.LoadServicePlans(); err != nil {
+		return
+	}
 	for _, each := range profiles {
-		pe, err := mac.NewPlanExecutor(*plansInput, each)
+		pe, err := mac.NewPlanExecutor(loader.Plans, each)
 		if err != nil {
 			return
 		}
