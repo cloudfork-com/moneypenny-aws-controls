@@ -15,37 +15,29 @@ var plansInput = flag.String("plans", "", "description of service plans")
 
 var debugging = flag.Bool("debug", false, "if true then more logging")
 
-var profile = flag.String("profile", "", "run for a specific AWS profile. If empty then run for all known profiles")
+var profile = flag.String("profile", "default", "run for a specific AWS profile")
 
 func main() {
 	flag.Parse()
 	setupLog()
 
-	// either one or all
-	profiles := []string{}
-	if *profile != "" {
-		profiles = append(profiles, *profile)
-	} else {
-		profiles = mac.GetLocalAwsProfiles()
-	}
 	loader := mac.NewPlanLoader(*plansInput)
 	if err := loader.LoadServicePlans(); err != nil {
 		return
 	}
-	for _, each := range profiles {
-		pe, err := mac.NewPlanExecutor(loader.Plans, each)
-		if err != nil {
-			return
-		}
-		if slices.Contains(os.Args, "apply") {
-			pe.Apply()
-		} else if slices.Contains(os.Args, "report") {
-			pe.Report()
-		} else {
-			pe.Plan()
-
-		}
+	pe, err := mac.NewPlanExecutor(loader.Plans, *profile)
+	if err != nil {
+		return
 	}
+	if slices.Contains(os.Args, "apply") {
+		pe.Apply()
+	} else if slices.Contains(os.Args, "report") {
+		pe.Report()
+	} else {
+		pe.Plan()
+
+	}
+
 }
 
 func setupLog() {

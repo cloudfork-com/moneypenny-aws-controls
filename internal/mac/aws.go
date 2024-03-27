@@ -3,31 +3,11 @@ package mac
 import (
 	"context"
 	"log/slog"
-	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"gopkg.in/ini.v1"
 )
-
-func GetLocalAwsProfiles() (list []string) {
-	fname := config.DefaultSharedConfigFilename() // Get aws.config default shared configuration file name
-	f, err := ini.Load(fname)                     // Load ini file
-	if err != nil {
-		return
-	}
-	for _, v := range f.Sections() {
-		if len(v.Keys()) != 0 { // Get only the sections having Keys
-			parts := strings.Split(v.Name(), " ")
-			if len(parts) == 2 && parts[0] == "profile" { // skip default
-				list = append(list, parts[1])
-			}
-		}
-	}
-	return
-}
 
 func AllServices(clog *slog.Logger, client *ecs.Client) (list []types.Service, err error) {
 	ctx := context.Background()

@@ -72,10 +72,8 @@ func (p *PlanExecutor) Report() error {
 
 func (p *PlanExecutor) applyLocalPlans() {
 	for _, each := range p.localPlans {
-		if each.Profile == p.profile {
-			p.clog.Debug("adding local service plan", "service", each.ARN, "disabled", each.Disabled)
-			p.weekPlan.AddServicePlan(*each)
-		}
+		p.clog.Debug("adding local service plan", "service", each.ARN, "disabled", each.Disabled)
+		p.weekPlan.AddServicePlan(*each)
 	}
 }
 

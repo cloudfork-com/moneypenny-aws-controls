@@ -8,7 +8,6 @@ import (
 
 type ServicePlan struct {
 	Service
-	Profile      string         `json:"profile"`
 	TagValue     string         `json:"moneypenny"`
 	StateChanges []*StateChange `json:"state-changes"`
 	Disabled     bool           `json:"disabled"`
@@ -21,16 +20,6 @@ type StateChange struct {
 
 func (s *StateChange) String() string {
 	return fmt.Sprintf("%s=%s.", s.DesiredState, s.Cron)
-}
-
-func (s *StateChange) Equals(other *StateChange) bool {
-	if s == other {
-		return true
-	}
-	if s.DesiredState != other.DesiredState {
-		return false
-	}
-	return s.Cron != other.Cron
 }
 
 func (t *ServicePlan) Validate() error {

@@ -9,7 +9,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.2
 	github.com/emicklei/tre v1.5.0
 	github.com/lmittmann/tint v1.0.4
-	gopkg.in/ini.v1 v1.67.0
 )
 
 require (

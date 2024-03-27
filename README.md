@@ -38,13 +38,11 @@ In `aws-service-plans.json` specify the services and cron expressions.
 
 ```
 [
-    {
-        "profile": "my-aws-profile",
+    { 
         "service-arn": "arn:aws:ecs:eu-central-1:9111111:service/cluster/name",
         "moneypenny": "running=0 8 1-5. stopped=0 18 1-5."
     },
-    {
-        "profile": "my-aws-profile",
+    { 
         "service-arn": "arn:aws:ecs:eu-central-1:9111111:service/cluster/high-load",
         "desired-tasks-count": 4,
         "moneypenny": "running=0 7 1-5. stopped=0 22 1-5."
