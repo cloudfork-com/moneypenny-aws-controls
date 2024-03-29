@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"log/slog"
-	"path"
 
 	"github.com/emicklei/htmlslog"
 
@@ -28,7 +27,8 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		resp.Body = logHandler.Close()
 		return resp, err
 	}
-	switch path.Base(req.Path) {
+	action := req.QueryStringParameters["do"]
+	switch action {
 	case "apply":
 		pe.Apply()
 	case "report":
