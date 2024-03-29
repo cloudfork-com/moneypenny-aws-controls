@@ -3,6 +3,7 @@ package mac
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"slices"
@@ -43,7 +44,15 @@ func (p *PlanExecutor) Apply() error {
 	p.dryRun = false
 	return p.exec()
 }
+
 func (p *PlanExecutor) Report() error {
+	rout, _ := os.Create(fmt.Sprintf("%s-schedule.html", p.profile))
+	defer rout.Close()
+	slog.Info("write schedule")
+	return p.ReportHTMLOn(rout)
+}
+
+func (p *PlanExecutor) ReportHTMLOn(w io.Writer) error {
 	p.clog = slog.With("exec", "REPORT", "profile", p.profile)
 	// collect plans from tagges services
 	allServices, err := p.fetchAllServices()
@@ -59,11 +68,8 @@ func (p *PlanExecutor) Report() error {
 		tp.doesNotExist = !exitsInCluster
 	})
 
-	rout, _ := os.Create(fmt.Sprintf("%s-schedule.html", p.profile))
-	defer rout.Close()
-	p.clog.Info("write schedule")
 	rep := Reporter{}
-	if err := rep.WriteOn(p.profile, p.weekPlan, rout); err != nil {
+	if err := rep.WriteOn(p.profile, p.weekPlan, w); err != nil {
 		p.clog.Error("schedule report failed", "err", err)
 		return err
 	}

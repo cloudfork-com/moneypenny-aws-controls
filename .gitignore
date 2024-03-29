@@ -2,3 +2,4 @@ cmd/awscontrols/aws-service-plans.json
 .vscode/launch.json
 cmd/awscontrols/*schedule.html
 cmd/awscontrols/Makefile
+lambda/bootstrap

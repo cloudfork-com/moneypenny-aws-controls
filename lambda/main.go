@@ -1,34 +1,48 @@
 package main
 
 import (
+	"bytes"
 	"context"
-	"fmt"
+	"log/slog"
 
+	"github.com/emicklei/htmlslog"
+
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/cloudfork-com/moneypenny-aws-controls/internal/mac"
 )
 
-type Command struct {
-	Name string `json:"command"` // plan,apply,report
-}
+func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	buf := new(bytes.Buffer)
+	resp := events.APIGatewayProxyResponse{
+		Headers:    map[string]string{"Content-Type": "text/html; charset=UTF-8"},
+		StatusCode: 200}
 
-func HandleRequest(ctx context.Context, cmd *Command) (*string, error) {
-	if cmd == nil {
-		return nil, fmt.Errorf("received nil command")
-	}
-	pe, err := mac.NewPlanExecutor([]*mac.ServicePlan{}, "") // default
+	logHandler := htmlslog.New(slog.LevelDebug)
+	slog.SetDefault(slog.New(logHandler))
+
+	pe, err := mac.NewPlanExecutor([]*mac.ServicePlan{}, "") // default profile
 	if err != nil {
-		return nil, fmt.Errorf("failed to create executor:%w", err)
+		resp.StatusCode = 500
+		resp.Body = logHandler.Close()
+		return resp, err
 	}
-	switch cmd.Name {
-	case "apply":
+	switch req.Path {
+	case "/apply":
 		pe.Apply()
-	case "report":
-		pe.Report()
+	case "/report":
+		if err := pe.ReportHTMLOn(buf); err != nil {
+			resp.StatusCode = 500
+			resp.Body = logHandler.Close()
+			return resp, err
+		}
+		resp.Body = buf.String()
+		return resp, nil
 	default:
 		pe.Plan()
 	}
-	return nil, nil
+	resp.Body = logHandler.Close()
+	return resp, nil
 }
 
 func main() {
