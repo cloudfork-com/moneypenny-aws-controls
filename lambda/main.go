@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"log/slog"
+	"path"
 
 	"github.com/emicklei/htmlslog"
 
@@ -18,7 +19,7 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		Headers:    map[string]string{"Content-Type": "text/html; charset=UTF-8"},
 		StatusCode: 200}
 
-	logHandler := htmlslog.New(slog.LevelDebug)
+	logHandler := htmlslog.New(htmlslog.Options{Level: slog.LevelDebug, Title: "moneypenny-aws-controls"})
 	slog.SetDefault(slog.New(logHandler))
 
 	pe, err := mac.NewPlanExecutor([]*mac.ServicePlan{}, "") // default profile
@@ -27,10 +28,10 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		resp.Body = logHandler.Close()
 		return resp, err
 	}
-	switch req.Path {
-	case "/apply":
+	switch path.Base(req.Path) {
+	case "apply":
 		pe.Apply()
-	case "/report":
+	case "report":
 		if err := pe.ReportHTMLOn(buf); err != nil {
 			resp.StatusCode = 500
 			resp.Body = logHandler.Close()

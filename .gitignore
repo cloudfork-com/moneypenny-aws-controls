@@ -3,3 +3,4 @@ cmd/awscontrols/aws-service-plans.json
 cmd/awscontrols/*schedule.html
 cmd/awscontrols/Makefile
 lambda/bootstrap
+lambda/*.zip
