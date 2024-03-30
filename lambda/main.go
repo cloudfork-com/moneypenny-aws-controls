@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"io"
 	"log/slog"
 	"os"
 
@@ -45,12 +47,14 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 			resp.Body = logBuffer.String()
 			return resp, err
 		}
+		versionOn(html)
 		resp.Body = html.String()
 		return resp, nil
 	default:
 		pe.Plan()
 	}
 	logHandler.Close()
+	versionOn(logBuffer)
 	resp.Body = logBuffer.String()
 	return resp, nil
 }
@@ -64,4 +68,8 @@ func removeTimeAndLevel(groups []string, a slog.Attr) slog.Attr {
 		return slog.Attr{}
 	}
 	return a
+}
+
+func versionOn(w io.Writer) {
+	fmt.Fprintf(w, "<p style='font-size: 10px;'>moneypenny-aws-controls: %s</p>", Version)
 }

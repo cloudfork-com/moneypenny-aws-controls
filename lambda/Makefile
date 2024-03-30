@@ -6,7 +6,7 @@ test:
 
 deploy: compile zip upgrade
 
-BUILD=`git rev-parse HEAD` 
+BUILD=`git describe --tags --abbrev=0` 
 LDFLAGS=-ldflags "-X=main.Version=$(BUILD)"
 compile:
 	GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -tags lambda.norpc -o bootstrap main.go
