@@ -58,6 +58,8 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 			return resp, err
 		}
 		html := new(bytes.Buffer)
+		rep.WriteOpenHTMLOn(html)
+
 		fmt.Fprintln(html, "<h2>Status</h2>")
 		if err := rep.WriteStatusOn(html); err != nil {
 			logHandler.Close()
