@@ -1,6 +1,6 @@
 cmd/awscontrols/aws-service-plans.json
 .vscode/launch.json
-cmd/awscontrolz/*.html
+cmd/awscontrols/*.html
 cmd/awscontrols/Makefile
 lambda/bootstrap
 lambda/*.zip
