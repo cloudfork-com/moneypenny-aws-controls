@@ -17,6 +17,10 @@ import (
 
 var Version string = "dev"
 
+func main() {
+	lambda.Start(HandleRequest)
+}
+
 func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	resp := events.APIGatewayProxyResponse{
 		Headers:    map[string]string{"Content-Type": "text/html; charset=UTF-8"},
@@ -25,7 +29,11 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 	// setup logging
 	logBuffer := new(bytes.Buffer)
 	stdoutHandler := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug, ReplaceAttr: removeTimeAndLevel})
-	logHandler := htmlslog.New(logBuffer, htmlslog.Options{Level: slog.LevelDebug, Title: "moneypenny-aws-controls", PassthroughHandler: stdoutHandler})
+	logHandler := htmlslog.New(logBuffer, htmlslog.Options{
+		Level:              slog.LevelDebug,
+		Title:              "moneypenny-aws-controls",
+		PassthroughHandler: stdoutHandler,
+		TableOnly:          true})
 	slog.SetDefault(slog.New(logHandler))
 
 	pe, err := mac.NewPlanExecutor([]*mac.ServicePlan{}, "") // default profile
@@ -39,28 +47,40 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 	switch action {
 	case "apply":
 		pe.Apply()
-	case "report":
+	case "plan":
+		pe.Plan()
+	default: // all
 		html := new(bytes.Buffer)
-		if err := pe.ReportHTMLOn(html); err != nil {
+		rep := mac.NewReporter(pe)
+		rep.WriteOpenHTMLOn(html)
+		fmt.Fprintln(html, "<h2>Status</h2>")
+		if err := rep.WriteStatusOn(html); err != nil {
 			logHandler.Close()
 			resp.StatusCode = 500
 			resp.Body = logBuffer.String()
 			return resp, err
 		}
+		fmt.Fprintln(html, "<h2>Schedule</h2>")
+		if err := rep.WriteScheduleOn(html); err != nil {
+			logHandler.Close()
+			resp.StatusCode = 500
+			resp.Body = logBuffer.String()
+			return resp, err
+		}
+		fmt.Fprintln(html, "<h2>Log</h2>")
+		logHandler.Close()
+		fmt.Fprintln(html, logBuffer.String())
+
 		versionOn(html)
+		rep.WriteCloseHTMLOn(html)
 		resp.Body = html.String()
 		return resp, nil
-	default:
-		pe.Plan()
 	}
-	logHandler.Close()
+	// all but report
 	versionOn(logBuffer)
+	logHandler.Close()
 	resp.Body = logBuffer.String()
 	return resp, nil
-}
-
-func main() {
-	lambda.Start(HandleRequest)
 }
 
 func removeTimeAndLevel(groups []string, a slog.Attr) slog.Attr {

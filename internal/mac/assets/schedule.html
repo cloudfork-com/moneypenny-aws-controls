@@ -1,0 +1,24 @@
+{{$stateLabel := .StateLabel}}
+{{ range .Days }}
+<h3>{{.Name}} ({{.DayNumber}})</h3>
+<table>
+    <tr>
+        <th>Time</th>
+        <th>{{$stateLabel}}</th>
+        <th>Service</th>
+        <th>Cluster</th>
+        <th>Cron</th>
+    </tr>
+    {{ range .Times }}
+    <tr class="{{.RowClass}}">
+        <td>{{twoDigits .Plan.Hour}}:{{twoDigits .Plan.Minute}}</td>
+        <td>{{.Plan.DesiredState}}</td>
+        <td>{{.ServiceName}}
+        </td>
+        <td>{{.ClusterARN}}</td>
+        <td>{{.Cron}}</td>
+        </td>
+    </tr>
+    {{ end }}
+</table>
+{{ end }}

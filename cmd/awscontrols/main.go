@@ -33,9 +33,10 @@ func main() {
 		pe.Apply()
 	} else if slices.Contains(os.Args, "report") {
 		pe.Report()
+	} else if slices.Contains(os.Args, "schedule") {
+		pe.Schedule()
 	} else {
 		pe.Plan()
-
 	}
 
 }

@@ -2,82 +2,104 @@ package mac
 
 import (
 	"fmt"
-	"html/template"
 	"io"
-	"strconv"
-	"time"
+	"log/slog"
+	"os"
 
 	_ "embed"
-
-	"github.com/emicklei/tre"
 )
 
-//go:embed report.html
-var reportHTML string
-
 type Reporter struct {
+	executor *PlanExecutor
 }
 
-func (r Reporter) WriteOn(profile string, wp *WeekPlan, w io.Writer) error {
-	tmpl := template.New("report")
-	tmpl = tmpl.Funcs(template.FuncMap{
-		"twoDigits": func(i int) string {
-			s := strconv.Itoa(i)
-			if len(s) == 1 {
-				return "0" + s
-			} else {
-				return s
-			}
-		}})
-	tmpl, err := tmpl.Parse(reportHTML)
-	if err != nil {
-		return tre.New(err, "parse template fail")
+func NewReporter(exec *PlanExecutor) *Reporter {
+	return &Reporter{
+		executor: exec,
 	}
-	wd := WeekData{Profile: profile}
-	for d := 0; d < 7; d++ {
-		dd := DayData{}
-		day := time.Weekday(d)
-		if now := time.Now(); now.Weekday() == day {
-			dd.Today = fmt.Sprintf("is today, %s", now.Format(time.DateOnly))
-		}
-		dd.DayNumber = int(day)
-		dd.Name = day.String()
-		for _, tp := range wp.ScheduleForDay(day) {
-			td := TimeData{}
-			td.ClusterARN = tp.ClusterARN()
-			td.ServiceName = tp.Name()
-			td.Plan = tp
-			td.Cron = "?"
-			td.RowClass = "stopped"
-			td.Cron = tp.cron
-			if tp.DesiredState == Running {
-				td.RowClass = "running"
-			}
-			if tp.doesNotExist {
-				td.RowClass = "absent"
-				td.ServiceName = "MISSING: " + td.ServiceName
-			}
-			dd.Times = append(dd.Times, td)
-		}
-		wd.Days = append(wd.Days, dd)
-	}
-	return tre.New(tmpl.Execute(w, wd), "template exec fail")
 }
 
-type WeekData struct {
-	Profile string
-	Days    []DayData
+func (r *Reporter) Report() error {
+	if err := r.executor.prepareReporting(); err != nil {
+		return err
+	}
+	rout, _ := os.Create(fmt.Sprintf("%s-report.html", r.executor.profile))
+	defer rout.Close()
+	slog.Info("write report")
+	r.WriteOpenHTMLOn(rout)
+	fmt.Fprintln(rout, "<h2>Status</h2>")
+	if err := r.WriteStatusOn(rout); err != nil {
+		return err
+	}
+	fmt.Fprintln(rout, "<h2>Schedule</h2>")
+	if err := r.WriteScheduleOn(rout); err != nil {
+		return err
+	}
+	return r.WriteCloseHTMLOn(rout)
 }
-type DayData struct {
-	Name      string
-	DayNumber int
-	Today     string
-	Times     []TimeData
+
+func (r *Reporter) Schedule() error {
+	if err := r.executor.prepareReporting(); err != nil {
+		return err
+	}
+	rout, _ := os.Create(fmt.Sprintf("%s-schedule.html", r.executor.profile))
+	defer rout.Close()
+	r.WriteOpenHTMLOn(rout)
+	fmt.Fprintln(rout, "<h2>Schedule</h2>")
+	if err := r.WriteScheduleOn(rout); err != nil {
+		return err
+	}
+	return r.WriteCloseHTMLOn(rout)
 }
-type TimeData struct {
-	RowClass    string
-	Plan        *TimePlan
-	ServiceName string
-	ClusterARN  string
-	Cron        string
+
+func (r *Reporter) Status() error {
+	if err := r.executor.prepareReporting(); err != nil {
+		return err
+	}
+	rout, _ := os.Create(fmt.Sprintf("%s-status.html", r.executor.profile))
+	defer rout.Close()
+	r.WriteOpenHTMLOn(rout)
+	fmt.Fprintln(rout, "<h2>Status</h2>")
+	if err := r.WriteStatusOn(rout); err != nil {
+		return err
+	}
+	return r.WriteCloseHTMLOn(rout)
+}
+
+//go:embed "assets/open.html"
+var openHTML string
+
+func (r *Reporter) WriteOpenHTMLOn(w io.Writer) error {
+	if _, err := w.Write([]byte(openHTML)); err != nil {
+		return err
+	}
+	return nil
+}
+
+//go:embed "assets/close.html"
+var closeHTML string
+
+func (r *Reporter) WriteCloseHTMLOn(w io.Writer) error {
+	if _, err := w.Write([]byte(closeHTML)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Reporter) WriteScheduleOn(w io.Writer) error {
+	rep := ScheduleWriter{}
+	if err := rep.WriteOn(r.executor.profile, r.executor.weekPlan, w); err != nil {
+		slog.Error("schedule report failed", "err", err)
+		return err
+	}
+	return nil
+}
+
+func (r *Reporter) WriteStatusOn(w io.Writer) error {
+	rep := StatusWriter{client: r.executor.client}
+	if err := rep.WriteOn(r.executor.plans, w); err != nil {
+		slog.Error("status writefailed", "err", err)
+		return err
+	}
+	return nil
 }

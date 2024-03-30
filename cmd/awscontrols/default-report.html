@@ -1,0 +1,453 @@
+<html>
+
+<head>
+    <title>Moneypenny AWS Controls</title>
+</head>
+<style>
+    td,
+    th {
+        font-family: monospace;
+    }
+
+    body {
+        font-family: "Open Sans", Tahoma, Geneva, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    .stopped {
+        background-color: #ecc9c9;
+    }
+
+    .absent {
+        background-color: #e6d00e;
+    }
+
+    .running {
+        background-color: #a3c4a6;
+    }
+</style>
+
+<body><h2>Status</h2>
+
+
+<h3>Saturday (6)</h3>
+<table>
+    <tr>
+        <th>Time</th>
+        <th>Actual State</th>
+        <th>Service</th>
+        <th>Cluster</th>
+        <th>Cron</th>
+    </tr>
+    
+    <tr class="stopped">
+        <td>13:29</td>
+        <td>STOPPED</td>
+        <td>prod-athens-go-proxy
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>running=0 7 1-5. stopped=0 19 1-5.</td>
+        </td>
+    </tr>
+    
+    <tr class="stopped">
+        <td>13:29</td>
+        <td>STOPPED</td>
+        <td>cockpit-cockpit-dev
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>running=0 7 1-5. stopped= 0 19 1-5</td>
+        </td>
+    </tr>
+    
+</table>
+<h2>Schedule</h2>
+
+
+<h3>Sunday (0)</h3>
+<table>
+    <tr>
+        <th>Time</th>
+        <th>Desired State</th>
+        <th>Service</th>
+        <th>Cluster</th>
+        <th>Cron</th>
+    </tr>
+    
+</table>
+
+<h3>Monday (1)</h3>
+<table>
+    <tr>
+        <th>Time</th>
+        <th>Desired State</th>
+        <th>Service</th>
+        <th>Cluster</th>
+        <th>Cron</th>
+    </tr>
+    
+    <tr class="absent">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>MISSING: seaspray-test-kangaroo
+        </td>
+        <td>arn:aws:ecs:eu-central-1:911184320458:cluster/QR3GrimlockCluster</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="running">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>prod-athens-go-proxy
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="running">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>cockpit-cockpit-dev
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="absent">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>MISSING: seaspray-test-kangaroo
+        </td>
+        <td>arn:aws:ecs:eu-central-1:911184320458:cluster/QR3GrimlockCluster</td>
+        <td>0 19 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="stopped">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>prod-athens-go-proxy
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 19 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="stopped">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>cockpit-cockpit-dev
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td> 0 19 1-5</td>
+        </td>
+    </tr>
+    
+</table>
+
+<h3>Tuesday (2)</h3>
+<table>
+    <tr>
+        <th>Time</th>
+        <th>Desired State</th>
+        <th>Service</th>
+        <th>Cluster</th>
+        <th>Cron</th>
+    </tr>
+    
+    <tr class="absent">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>MISSING: seaspray-test-kangaroo
+        </td>
+        <td>arn:aws:ecs:eu-central-1:911184320458:cluster/QR3GrimlockCluster</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="running">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>prod-athens-go-proxy
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="running">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>cockpit-cockpit-dev
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="absent">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>MISSING: seaspray-test-kangaroo
+        </td>
+        <td>arn:aws:ecs:eu-central-1:911184320458:cluster/QR3GrimlockCluster</td>
+        <td>0 19 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="stopped">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>prod-athens-go-proxy
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 19 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="stopped">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>cockpit-cockpit-dev
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td> 0 19 1-5</td>
+        </td>
+    </tr>
+    
+</table>
+
+<h3>Wednesday (3)</h3>
+<table>
+    <tr>
+        <th>Time</th>
+        <th>Desired State</th>
+        <th>Service</th>
+        <th>Cluster</th>
+        <th>Cron</th>
+    </tr>
+    
+    <tr class="absent">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>MISSING: seaspray-test-kangaroo
+        </td>
+        <td>arn:aws:ecs:eu-central-1:911184320458:cluster/QR3GrimlockCluster</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="running">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>prod-athens-go-proxy
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="running">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>cockpit-cockpit-dev
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="absent">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>MISSING: seaspray-test-kangaroo
+        </td>
+        <td>arn:aws:ecs:eu-central-1:911184320458:cluster/QR3GrimlockCluster</td>
+        <td>0 19 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="stopped">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>prod-athens-go-proxy
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 19 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="stopped">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>cockpit-cockpit-dev
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td> 0 19 1-5</td>
+        </td>
+    </tr>
+    
+</table>
+
+<h3>Thursday (4)</h3>
+<table>
+    <tr>
+        <th>Time</th>
+        <th>Desired State</th>
+        <th>Service</th>
+        <th>Cluster</th>
+        <th>Cron</th>
+    </tr>
+    
+    <tr class="absent">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>MISSING: seaspray-test-kangaroo
+        </td>
+        <td>arn:aws:ecs:eu-central-1:911184320458:cluster/QR3GrimlockCluster</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="running">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>prod-athens-go-proxy
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="running">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>cockpit-cockpit-dev
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="absent">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>MISSING: seaspray-test-kangaroo
+        </td>
+        <td>arn:aws:ecs:eu-central-1:911184320458:cluster/QR3GrimlockCluster</td>
+        <td>0 19 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="stopped">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>prod-athens-go-proxy
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 19 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="stopped">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>cockpit-cockpit-dev
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td> 0 19 1-5</td>
+        </td>
+    </tr>
+    
+</table>
+
+<h3>Friday (5)</h3>
+<table>
+    <tr>
+        <th>Time</th>
+        <th>Desired State</th>
+        <th>Service</th>
+        <th>Cluster</th>
+        <th>Cron</th>
+    </tr>
+    
+    <tr class="absent">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>MISSING: seaspray-test-kangaroo
+        </td>
+        <td>arn:aws:ecs:eu-central-1:911184320458:cluster/QR3GrimlockCluster</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="running">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>prod-athens-go-proxy
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="running">
+        <td>07:00</td>
+        <td>RUNNING</td>
+        <td>cockpit-cockpit-dev
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 7 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="absent">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>MISSING: seaspray-test-kangaroo
+        </td>
+        <td>arn:aws:ecs:eu-central-1:911184320458:cluster/QR3GrimlockCluster</td>
+        <td>0 19 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="stopped">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>prod-athens-go-proxy
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td>0 19 1-5</td>
+        </td>
+    </tr>
+    
+    <tr class="stopped">
+        <td>19:00</td>
+        <td>STOPPED</td>
+        <td>cockpit-cockpit-dev
+        </td>
+        <td>arn:aws:ecs:eu-central-1:413736178351:cluster/CICD</td>
+        <td> 0 19 1-5</td>
+        </td>
+    </tr>
+    
+</table>
+
+<h3>Saturday (6)</h3>
+<table>
+    <tr>
+        <th>Time</th>
+        <th>Desired State</th>
+        <th>Service</th>
+        <th>Cluster</th>
+        <th>Cron</th>
+    </tr>
+    
+</table>
+</body>
+
+</html>

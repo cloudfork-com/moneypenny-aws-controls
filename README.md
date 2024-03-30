@@ -35,12 +35,18 @@ running=0 0 0-6.
 ### Local config
 
 In `aws-service-plans.json` specify the services and cron expressions.
+Local enabled defined plans override the onces defined in AWS.
 
 ```
 [
     { 
         "service-arn": "arn:aws:ecs:eu-central-1:9111111:service/cluster/name",
         "moneypenny": "running=0 8 1-5. stopped=0 18 1-5."
+    },
+    { 
+        "service-arn": "arn:aws:ecs:eu-central-1:9111111:service/cluster/ignore",
+        "moneypenny": "running=0 8 1-5. stopped=0 18 1-5.",
+        "disabled": true
     },
     { 
         "service-arn": "arn:aws:ecs:eu-central-1:9111111:service/cluster/high-load",

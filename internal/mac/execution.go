@@ -2,12 +2,11 @@ package mac
 
 import (
 	"context"
-	"fmt"
-	"io"
 	"log/slog"
-	"os"
 	"slices"
 	"time"
+
+	_ "embed"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -17,13 +16,14 @@ import (
 var serviceTagName = "moneypenny"
 
 type PlanExecutor struct {
-	dryRun     bool
-	weekPlan   *WeekPlan
-	localPlans []*ServicePlan
-	plans      []*ServicePlan
-	client     *ecs.Client
-	profile    string
-	clog       *slog.Logger
+	dryRun          bool
+	weekPlan        *WeekPlan
+	localPlans      []*ServicePlan
+	plans           []*ServicePlan
+	client          *ecs.Client
+	profile         string
+	clog            *slog.Logger
+	fetchedServices []types.Service
 }
 
 func NewPlanExecutor(localPlans []*ServicePlan, profile string) (*PlanExecutor, error) {
@@ -52,23 +52,38 @@ func (p *PlanExecutor) Apply() error {
 }
 
 func (p *PlanExecutor) Report() error {
-	rout, _ := os.Create(fmt.Sprintf("%s-schedule.html", p.profile))
-	defer rout.Close()
-	slog.Info("write schedule")
-	return p.ReportHTMLOn(rout)
-}
-
-func (p *PlanExecutor) ReportHTMLOn(w io.Writer) error {
 	p.clog = slog.With("exec", "REPORT")
 	if p.profile != "" {
 		p.clog = p.clog.With("profile", p.profile)
 	}
+	slog.Info("write report")
+	return NewReporter(p).Report()
+}
+
+func (p *PlanExecutor) Status() error {
+	p.clog = slog.With("exec", "STATUS")
+	if p.profile != "" {
+		p.clog = p.clog.With("profile", p.profile)
+	}
+	slog.Info("write status")
+	return NewReporter(p).Status()
+}
+
+func (p *PlanExecutor) Schedule() error {
+	p.clog = slog.With("exec", "SCHEDULE")
+	if p.profile != "" {
+		p.clog = p.clog.With("profile", p.profile)
+	}
+	slog.Info("write schedule")
+	return NewReporter(p).Schedule()
+}
+
+func (p *PlanExecutor) prepareReporting() error {
 	// collect plans from tagges services
 	allServices, err := p.fetchAllServices()
 	if err != nil {
 		return err
 	}
-
 	// check existence
 	p.weekPlan.TimePlansDo(func(tp *TimePlan) {
 		exitsInCluster := slices.ContainsFunc(allServices, func(existing types.Service) bool {
@@ -76,12 +91,6 @@ func (p *PlanExecutor) ReportHTMLOn(w io.Writer) error {
 		})
 		tp.doesNotExist = !exitsInCluster
 	})
-
-	rep := Reporter{}
-	if err := rep.WriteOn(p.profile, p.weekPlan, w); err != nil {
-		p.clog.Error("schedule report failed", "err", err)
-		return err
-	}
 	return nil
 }
 
@@ -103,6 +112,9 @@ func (p *PlanExecutor) createECSClient() error {
 }
 
 func (p *PlanExecutor) fetchAllServices() ([]types.Service, error) {
+	if p.fetchedServices != nil {
+		return p.fetchedServices, nil
+	}
 	allServices, err := AllServices(p.clog, p.client)
 	if err != nil {
 		p.clog.Error("AllServices fail", "err", err)
@@ -130,6 +142,8 @@ func (p *PlanExecutor) fetchAllServices() ([]types.Service, error) {
 		p.plans = append(p.plans, sp)
 		p.weekPlan.AddServicePlan(*sp)
 	}
+	// cache it
+	p.fetchedServices = allServices
 	return allServices, nil
 }
 
