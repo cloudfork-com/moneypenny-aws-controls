@@ -36,11 +36,17 @@ func NewPlanExecutor(localPlans []*ServicePlan, profile string) (*PlanExecutor, 
 }
 
 func (p *PlanExecutor) Plan() error {
-	p.clog = slog.With("exec", "PLAN", "profile", p.profile)
+	p.clog = slog.With("exec", "PLAN")
+	if p.profile != "" {
+		p.clog = p.clog.With("profile", p.profile)
+	}
 	return p.exec()
 }
 func (p *PlanExecutor) Apply() error {
-	p.clog = slog.With("exec", "APPLY", "profile", p.profile)
+	p.clog = slog.With("exec", "APPLY")
+	if p.profile != "" {
+		p.clog = p.clog.With("profile", p.profile)
+	}
 	p.dryRun = false
 	return p.exec()
 }
@@ -53,7 +59,10 @@ func (p *PlanExecutor) Report() error {
 }
 
 func (p *PlanExecutor) ReportHTMLOn(w io.Writer) error {
-	p.clog = slog.With("exec", "REPORT", "profile", p.profile)
+	p.clog = slog.With("exec", "REPORT")
+	if p.profile != "" {
+		p.clog = p.clog.With("profile", p.profile)
+	}
 	// collect plans from tagges services
 	allServices, err := p.fetchAllServices()
 	if err != nil {

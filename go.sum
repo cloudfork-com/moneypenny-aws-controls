@@ -33,8 +33,8 @@ github.com/aws/smithy-go v1.20.1/go.mod h1:krry+ya/rV9RDcV/Q16kpu6ypI4K2czasz0NC
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/emicklei/htmlslog v0.2.0 h1:kUTX2SDmJIj+qPiZSHRjMkbuh1tfbaJINEdhmljXg2w=
-github.com/emicklei/htmlslog v0.2.0/go.mod h1:beYGBrAQ3Z/XHm8ARi1OOaDF3q93E3e4g7DRTbX9Aek=
+github.com/emicklei/htmlslog v0.3.0 h1:uWVZoJvsWl24g8WkYDYZOfjlsrIYBoUcb23DpVEDNHw=
+github.com/emicklei/htmlslog v0.3.0/go.mod h1:beYGBrAQ3Z/XHm8ARi1OOaDF3q93E3e4g7DRTbX9Aek=
 github.com/emicklei/tre v1.5.0 h1:TrxCR3qvBSPovV4cxuLTWmbjghwHU6og3gXiQStU+QU=
 github.com/emicklei/tre v1.5.0/go.mod h1:3e+DTVKARET1BwLFwOIJwgYLUtkN+X9XZT0JDnb+OYY=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=

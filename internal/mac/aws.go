@@ -103,7 +103,7 @@ func TagValue(service types.Service, tagKey string) string {
 }
 
 func TasksForService(clog *slog.Logger, client *ecs.Client, clusterARN, shortServiceName string) ([]types.Task, error) {
-	clog.Info("collecting tasks", "service", shortServiceName)
+	clog.Info("collecting tasks", "name", shortServiceName)
 	ctx := context.Background()
 	taskList, err := client.ListTasks(ctx, &ecs.ListTasksInput{
 		Cluster:     aws.String(clusterARN),

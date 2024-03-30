@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"log/slog"
+	"os"
 
 	"github.com/emicklei/htmlslog"
 
@@ -13,18 +14,21 @@ import (
 )
 
 func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	buf := new(bytes.Buffer)
 	resp := events.APIGatewayProxyResponse{
 		Headers:    map[string]string{"Content-Type": "text/html; charset=UTF-8"},
 		StatusCode: 200}
 
-	logHandler := htmlslog.New(htmlslog.Options{Level: slog.LevelDebug, Title: "moneypenny-aws-controls"})
+	// setup logging
+	logBuffer := new(bytes.Buffer)
+	stdoutHandler := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})
+	logHandler := htmlslog.New(logBuffer, htmlslog.Options{Level: slog.LevelDebug, Title: "moneypenny-aws-controls", PassthroughHandler: stdoutHandler})
 	slog.SetDefault(slog.New(logHandler))
 
 	pe, err := mac.NewPlanExecutor([]*mac.ServicePlan{}, "") // default profile
 	if err != nil {
+		logHandler.Close()
 		resp.StatusCode = 500
-		resp.Body = logHandler.Close()
+		resp.Body = logBuffer.String()
 		return resp, err
 	}
 	action := req.QueryStringParameters["do"]
@@ -32,17 +36,20 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 	case "apply":
 		pe.Apply()
 	case "report":
-		if err := pe.ReportHTMLOn(buf); err != nil {
+		html := new(bytes.Buffer)
+		if err := pe.ReportHTMLOn(html); err != nil {
+			logHandler.Close()
 			resp.StatusCode = 500
-			resp.Body = logHandler.Close()
+			resp.Body = logBuffer.String()
 			return resp, err
 		}
-		resp.Body = buf.String()
+		resp.Body = html.String()
 		return resp, nil
 	default:
 		pe.Plan()
 	}
-	resp.Body = logHandler.Close()
+	logHandler.Close()
+	resp.Body = logBuffer.String()
 	return resp, nil
 }
 

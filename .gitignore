@@ -4,3 +4,4 @@ cmd/awscontrols/*schedule.html
 cmd/awscontrols/Makefile
 lambda/bootstrap
 lambda/*.zip
+lambda/*.sh
