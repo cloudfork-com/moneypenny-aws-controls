@@ -152,7 +152,7 @@ func (p *PlanExecutor) exec() error {
 	if err != nil {
 		return err
 	}
-	now := time.Now().In(timeLocation)
+	now := time.Now().In(userLocation)
 	for _, each := range p.plans {
 		if each.Disabled {
 			p.clog.Warn("disabled plan", "service", each.ARN)

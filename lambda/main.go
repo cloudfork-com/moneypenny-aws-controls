@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/emicklei/htmlslog"
 
@@ -35,12 +36,16 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 	logBuffer := new(bytes.Buffer)
 	stdoutHandler := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel, ReplaceAttr: removeTimeAndLevel})
 	logHandler := htmlslog.New(logBuffer, htmlslog.Options{
-		Level:              logLevel,
 		Title:              "moneypenny-aws-controls",
+		TimeLayout:         time.TimeOnly,
+		Level:              logLevel,
 		PassthroughHandler: stdoutHandler,
 		TableOnly:          true})
 	slog.SetDefault(slog.New(logHandler))
 
+	if err := mac.SetTimezone(os.Getenv("TIME_ZONE")); err != nil {
+		slog.Warn("failed to set timezone, using local", "err", err)
+	}
 	pe, err := mac.NewPlanExecutor([]*mac.ServicePlan{}, "") // default profile
 	if err != nil {
 		logHandler.Close()
