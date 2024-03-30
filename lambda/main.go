@@ -43,6 +43,7 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		resp.Body = logBuffer.String()
 		return resp, err
 	}
+	rep := mac.NewReporter(pe)
 	action := req.QueryStringParameters["do"]
 	switch action {
 	case "apply":
@@ -51,8 +52,6 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		pe.Plan()
 	default: // all
 		html := new(bytes.Buffer)
-		rep := mac.NewReporter(pe)
-		rep.WriteOpenHTMLOn(html)
 		fmt.Fprintln(html, "<h2>Status</h2>")
 		if err := rep.WriteStatusOn(html); err != nil {
 			logHandler.Close()
@@ -77,9 +76,14 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		return resp, nil
 	}
 	// all but report
-	versionOn(logBuffer)
 	logHandler.Close()
-	resp.Body = logBuffer.String()
+	html := new(bytes.Buffer)
+	rep.WriteOpenHTMLOn(html)
+	html.WriteString(logBuffer.String())
+	versionOn(html)
+	rep.WriteOpenHTMLOn(html)
+
+	resp.Body = html.String()
 	return resp, nil
 }
 
