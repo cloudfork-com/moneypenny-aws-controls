@@ -27,10 +27,15 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		StatusCode: 200}
 
 	// setup logging
+	isDebug := req.QueryStringParameters["debug"] == "true"
+	logLevel := slog.LevelInfo
+	if isDebug {
+		logLevel = slog.LevelDebug
+	}
 	logBuffer := new(bytes.Buffer)
-	stdoutHandler := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug, ReplaceAttr: removeTimeAndLevel})
+	stdoutHandler := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel, ReplaceAttr: removeTimeAndLevel})
 	logHandler := htmlslog.New(logBuffer, htmlslog.Options{
-		Level:              slog.LevelDebug,
+		Level:              logLevel,
 		Title:              "moneypenny-aws-controls",
 		PassthroughHandler: stdoutHandler,
 		TableOnly:          true})

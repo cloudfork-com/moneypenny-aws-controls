@@ -18,7 +18,7 @@ func (r *StatusWriter) WriteOn(plans []*ServicePlan, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	now := time.Now()
+	now := time.Now().In(timeLocation)
 	wd := WeekData{StateLabel: "Actual State"}
 	dd := DayData{}
 	day := now.Weekday()

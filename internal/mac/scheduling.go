@@ -11,6 +11,12 @@ const Running = "RUNNING"
 const Stopped = "STOPPED"
 const Unknown = "UNKNOWN"
 
+var timeLocation *time.Location
+
+func init() {
+	timeLocation, _ = time.LoadLocation("Europe/Amsterdam")
+}
+
 // ECS service
 type Service struct {
 	ARN               string `json:"service-arn"`
