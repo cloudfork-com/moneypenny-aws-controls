@@ -20,10 +20,13 @@ create:
 	--architectures arm64 \
 	--role ${ROLE} \
 	--timeout 60 \
-	--environment  "Variabled=TIME_ZONE=Europe/Amsterdam" \
+	--environment  "Variables={TIME_ZONE=Europe/Amsterdam}" \
 	--zip-file fileb://mac.zip
 
 upgrade:
 	aws lambda update-function-code --function-name MAC \
-	--environment  "Variabled=TIME_ZONE=Europe/Amsterdam" \
 	--zip-file fileb://mac.zip
+
+upconfig:
+	aws lambda update-function-configuration --function-name MAC \
+	--environment  "Variables={TIME_ZONE=Europe/Amsterdam}"

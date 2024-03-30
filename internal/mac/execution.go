@@ -3,6 +3,7 @@ package mac
 import (
 	"context"
 	"log/slog"
+	"os"
 	"slices"
 	"time"
 
@@ -153,6 +154,7 @@ func (p *PlanExecutor) exec() error {
 		return err
 	}
 	now := time.Now().In(userLocation)
+	slog.Info("executing", "time", now, "location", os.Getenv("TIME_ZONE"))
 	for _, each := range p.plans {
 		if each.Disabled {
 			p.clog.Warn("disabled plan", "service", each.ARN)

@@ -37,7 +37,7 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 	stdoutHandler := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel, ReplaceAttr: removeTimeAndLevel})
 	logHandler := htmlslog.New(logBuffer, htmlslog.Options{
 		Title:              "moneypenny-aws-controls",
-		TimeLayout:         time.TimeOnly,
+		TimeLayout:         time.RFC3339,
 		Level:              logLevel,
 		PassthroughHandler: stdoutHandler,
 		TableOnly:          true})
