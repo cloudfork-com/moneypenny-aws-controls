@@ -84,10 +84,7 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 			resp.Body = logBuffer.String()
 			return resp, err
 		}
-		fmt.Fprintln(html, "<h2>Log</h2>")
-		logHandler.Close()
-		fmt.Fprintln(html, logBuffer.String())
-
+		timezoneOn(html)
 		versionOn(html)
 		rep.WriteCloseHTMLOn(html)
 		resp.Body = html.String()
@@ -98,8 +95,9 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 	html := new(bytes.Buffer)
 	rep.WriteOpenHTMLOn(html)
 	html.WriteString(logBuffer.String())
+	timezoneOn(html)
 	versionOn(html)
-	rep.WriteOpenHTMLOn(html)
+	rep.WriteCloseHTMLOn(html)
 
 	resp.Body = html.String()
 	return resp, nil
@@ -114,4 +112,8 @@ func removeTimeAndLevel(groups []string, a slog.Attr) slog.Attr {
 
 func versionOn(w io.Writer) {
 	fmt.Fprintf(w, "<p style='font-size: 10px;'>moneypenny-aws-controls: %s</p>", Version)
+}
+
+func timezoneOn(w io.Writer) {
+	fmt.Fprintf(w, "<p style='font-size: 10px;'>time-zone: %s</p>", os.Getenv("TIME_ZONE"))
 }
