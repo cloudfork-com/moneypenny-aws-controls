@@ -78,7 +78,7 @@ func (p *PlanExecutor) Schedule() error {
 	return NewReporter(p).Schedule()
 }
 
-func (p *PlanExecutor) prepareReporting() error {
+func (p *PlanExecutor) BuildWeekPlan() error {
 	// collect plans from tagges services
 	allServices, err := p.fetchAllServices()
 	if err != nil {

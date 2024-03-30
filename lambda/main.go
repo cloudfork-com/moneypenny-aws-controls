@@ -51,6 +51,12 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 	case "plan":
 		pe.Plan()
 	default: // all
+		if err := pe.BuildWeekPlan(); err != nil {
+			logHandler.Close()
+			resp.StatusCode = 500
+			resp.Body = logBuffer.String()
+			return resp, err
+		}
 		html := new(bytes.Buffer)
 		fmt.Fprintln(html, "<h2>Status</h2>")
 		if err := rep.WriteStatusOn(html); err != nil {
