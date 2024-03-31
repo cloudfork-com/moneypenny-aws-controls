@@ -1,6 +1,6 @@
 {{$stateLabel := .StateLabel}}
 {{ range .Days }}
-<h3>{{.Name}} ({{.DayNumber}})</h3>
+<h3>{{.DayNumber}}: {{.Name}}</h3>
 <table>
     <tr>
         <th>Time</th>
@@ -8,6 +8,7 @@
         <th>Service</th>
         <th>Cluster</th>
         <th>Cron</th>
+        <th></th>
     </tr>
     {{ range .Times }}
     <tr class="{{.RowClass}}">
@@ -15,8 +16,13 @@
         <td>{{.Plan.DesiredState}}</td>
         <td>{{.ServiceName}}
         </td>
-        <td>{{.ClusterARN}}</td>
+        <td>{{.ClusterName}}</td>
         <td>{{.Cron}}</td>
+        <td>
+            {{ range .Links }}
+            <a href="{{.Href}}" target="_blank">{{.Title}}</a>
+            {{ end }}
+        </td>
         </td>
     </tr>
     {{ end }}

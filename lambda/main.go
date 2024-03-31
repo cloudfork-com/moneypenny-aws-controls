@@ -58,6 +58,10 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 	switch action {
 	case "apply":
 		pe.Apply()
+	case "start":
+		pe.Start(req.QueryStringParameters["service-arn"])
+	case "stop":
+		pe.Stop(req.QueryStringParameters["service-arn"])
 	case "plan":
 		pe.Plan()
 	default: // all

@@ -23,6 +23,16 @@ func (s Service) Name() string {
 func (s Service) ClusterARN() string {
 	return strings.Replace(path.Dir(s.ARN), "service", "cluster", -1)
 }
+func (s Service) ClusterName() string {
+	return path.Base(s.ClusterARN())
+}
+
+// https://eu-central-1.console.aws.amazon.com/ecs/v2/clusters/CICD/services/cockpit-cockpit-dev/tags?region=eu-central-1
+func (s Service) TagsURL() string {
+	region := "eu-central-1" // from ENV
+	return fmt.Sprintf("https://%s.console.aws.amazon.com/ecs/v2/clusters/%s/services/%s/tags?region=%s",
+		region, s.ClusterName(), s.Name(), region)
+}
 
 // Single occurrence in time
 type ScheduledEvent struct {

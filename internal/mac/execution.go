@@ -2,6 +2,7 @@ package mac
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os"
 	"slices"
@@ -50,6 +51,36 @@ func (p *PlanExecutor) Apply() error {
 	}
 	p.dryRun = false
 	return p.exec()
+}
+
+func (p *PlanExecutor) Start(serviceARN string) error {
+	p.clog = slog.With("exec", "START")
+	if p.profile != "" {
+		p.clog = p.clog.With("profile", p.profile)
+	}
+	p.dryRun = false
+	if serviceARN == "" {
+		return errors.New("no service ARN was given")
+	}
+	if err := p.createECSClient(); err != nil {
+		return err
+	}
+	return StartService(p.clog, p.client, Service{ARN: serviceARN, DesiredTasksCount: 1})
+}
+
+func (p *PlanExecutor) Stop(serviceARN string) error {
+	p.clog = slog.With("exec", "STOP")
+	if p.profile != "" {
+		p.clog = p.clog.With("profile", p.profile)
+	}
+	p.dryRun = false
+	if serviceARN == "" {
+		return errors.New("no service ARN was given")
+	}
+	if err := p.createECSClient(); err != nil {
+		return err
+	}
+	return StopService(p.clog, p.client, Service{ARN: serviceARN, DesiredTasksCount: 1})
 }
 
 func (p *PlanExecutor) Report() error {

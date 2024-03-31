@@ -1,6 +1,8 @@
 package mac
 
 import (
+	"fmt"
+	"html/template"
 	"io"
 	"log/slog"
 	"time"
@@ -42,9 +44,19 @@ func (r *StatusWriter) WriteOn(plans []*ServicePlan, w io.Writer) error {
 				Minute:       now.Minute(),
 			},
 			ServiceName: each.Name(),
-			ClusterARN:  each.ClusterARN(),
+			ClusterName: each.ClusterName(),
 			Cron:        each.TagValue,
 		}
+		if status == Stopped {
+			link := LinkData{Href: template.URL(fmt.Sprintf("?do=start&service-arn=%s", each.Service.ARN)), Title: "Start service"}
+			timeData.Links = append(timeData.Links, link)
+		} else {
+			link := LinkData{Href: template.URL(fmt.Sprintf("?do=stop&service-arn=%s", each.Service.ARN)), Title: "Stop service"}
+			timeData.Links = append(timeData.Links, link)
+		}
+		link := LinkData{Href: template.URL(each.TagsURL()), Title: "Manage tags"}
+		timeData.Links = append(timeData.Links, link)
+
 		dd.Times = append(dd.Times, timeData)
 	}
 	wd.Days = append(wd.Days, dd)

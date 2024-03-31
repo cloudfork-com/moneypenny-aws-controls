@@ -48,7 +48,7 @@ func (r ScheduleWriter) WriteOn(profile string, wp *WeekPlan, w io.Writer) error
 		dd.Name = day.String()
 		for _, tp := range wp.ScheduleForDay(day) {
 			td := TimeData{}
-			td.ClusterARN = tp.ClusterARN()
+			td.ClusterName = tp.ClusterName()
 			td.ServiceName = tp.Name()
 			td.Plan = tp
 			td.Cron = "?"
@@ -61,6 +61,8 @@ func (r ScheduleWriter) WriteOn(profile string, wp *WeekPlan, w io.Writer) error
 				td.RowClass = "absent"
 				td.ServiceName = "MISSING: " + td.ServiceName
 			}
+			link := LinkData{Href: template.URL(tp.TagsURL()), Title: "Manage tags"}
+			td.Links = append(td.Links, link)
 			dd.Times = append(dd.Times, td)
 		}
 		wd.Days = append(wd.Days, dd)
@@ -82,6 +84,11 @@ type TimeData struct {
 	RowClass    string
 	Plan        *TimePlan
 	ServiceName string
-	ClusterARN  string
+	ClusterName string
 	Cron        string
+	Links       []LinkData
+}
+type LinkData struct {
+	Href  template.URL
+	Title string
 }
