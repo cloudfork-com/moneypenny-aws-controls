@@ -13,8 +13,7 @@ const Unknown = "UNKNOWN"
 
 // ECS service
 type Service struct {
-	ARN               string `json:"service-arn"`
-	DesiredTasksCount int    `json:"desired-tasks-count"`
+	ARN string `json:"service-arn"`
 }
 
 func (s Service) Name() string {
@@ -37,7 +36,8 @@ func (s Service) TagsURL() string {
 // Single occurrence in time
 type ScheduledEvent struct {
 	Service
-	DesiredState string    `json:"desired-state"`
+	DesiredState string `json:"desired-state"`
+	DesiredCount int
 	At           time.Time `json:"at"`
 }
 
@@ -64,6 +64,7 @@ func (d *DayPlan) AddStateChange(service Service, change *StateChange) {
 		Hour:         change.CronSpec.Hour,
 		Minute:       change.CronSpec.Minute,
 		DesiredState: change.DesiredState,
+		DesiredCount: change.DesiredCount,
 		cron:         change.Cron,
 	})
 }
@@ -71,6 +72,7 @@ func (d *DayPlan) AddStateChange(service Service, change *StateChange) {
 type TimePlan struct {
 	Service
 	DesiredState string `json:"desired-state"`
+	DesiredCount int    // stopped=0, running=1+
 	Hour         int    `json:"hour"` // 24
 	Minute       int    `json:"minute"`
 	cron         string // what was used to create this

@@ -24,12 +24,11 @@ type PlanExecutor struct {
 	plans           []*ServicePlan
 	client          *ecs.Client
 	profile         string
-	clog            *slog.Logger
 	fetchedServices []types.Service
 }
 
 func NewPlanExecutor(localPlans []*ServicePlan, profile string) (*PlanExecutor, error) {
-	p := &PlanExecutor{weekPlan: new(WeekPlan), dryRun: true, profile: profile, clog: slog.Default(), localPlans: localPlans}
+	p := &PlanExecutor{weekPlan: new(WeekPlan), dryRun: true, profile: profile, localPlans: localPlans}
 	p.applyLocalPlans()
 	if err := p.createECSClient(); err != nil {
 		return nil, err
@@ -37,27 +36,26 @@ func NewPlanExecutor(localPlans []*ServicePlan, profile string) (*PlanExecutor, 
 	return p, nil
 }
 
-func (p *PlanExecutor) Plan() error {
-	p.clog = slog.With("exec", "PLAN")
-	if p.profile != "" {
-		p.clog = p.clog.With("profile", p.profile)
+func setLogContext(action, profile string) {
+	clog := slog.With("exec", action)
+	if profile != "" {
+		clog = clog.With("profile", profile)
 	}
+	slog.SetDefault(clog)
+}
+
+func (p *PlanExecutor) Plan() error {
+	setLogContext("plan", p.profile)
 	return p.exec()
 }
 func (p *PlanExecutor) Apply() error {
-	p.clog = slog.With("exec", "APPLY")
-	if p.profile != "" {
-		p.clog = p.clog.With("profile", p.profile)
-	}
+	setLogContext("apply", p.profile)
 	p.dryRun = false
 	return p.exec()
 }
 
 func (p *PlanExecutor) Start(serviceARN string) error {
-	p.clog = slog.With("exec", "START")
-	if p.profile != "" {
-		p.clog = p.clog.With("profile", p.profile)
-	}
+	setLogContext("start", p.profile)
 	p.dryRun = false
 	if serviceARN == "" {
 		return errors.New("no service ARN was given")
@@ -65,14 +63,11 @@ func (p *PlanExecutor) Start(serviceARN string) error {
 	if err := p.createECSClient(); err != nil {
 		return err
 	}
-	return StartService(p.clog, p.client, Service{ARN: serviceARN, DesiredTasksCount: 1})
+	return StartService(p.client, Service{ARN: serviceARN}, 1)
 }
 
 func (p *PlanExecutor) Stop(serviceARN string) error {
-	p.clog = slog.With("exec", "STOP")
-	if p.profile != "" {
-		p.clog = p.clog.With("profile", p.profile)
-	}
+	setLogContext("stop", p.profile)
 	p.dryRun = false
 	if serviceARN == "" {
 		return errors.New("no service ARN was given")
@@ -80,32 +75,23 @@ func (p *PlanExecutor) Stop(serviceARN string) error {
 	if err := p.createECSClient(); err != nil {
 		return err
 	}
-	return StopService(p.clog, p.client, Service{ARN: serviceARN, DesiredTasksCount: 1})
+	return StopService(p.client, Service{ARN: serviceARN})
 }
 
 func (p *PlanExecutor) Report() error {
-	p.clog = slog.With("exec", "REPORT")
-	if p.profile != "" {
-		p.clog = p.clog.With("profile", p.profile)
-	}
+	setLogContext("report", p.profile)
 	slog.Info("write report")
 	return NewReporter(p).Report()
 }
 
 func (p *PlanExecutor) Status() error {
-	p.clog = slog.With("exec", "STATUS")
-	if p.profile != "" {
-		p.clog = p.clog.With("profile", p.profile)
-	}
+	setLogContext("status", p.profile)
 	slog.Info("write status")
 	return NewReporter(p).Status()
 }
 
 func (p *PlanExecutor) Schedule() error {
-	p.clog = slog.With("exec", "SCHEDULE")
-	if p.profile != "" {
-		p.clog = p.clog.With("profile", p.profile)
-	}
+	setLogContext("schedule", p.profile)
 	slog.Info("write schedule")
 	return NewReporter(p).Schedule()
 }
@@ -128,7 +114,7 @@ func (p *PlanExecutor) BuildWeekPlan() error {
 
 func (p *PlanExecutor) applyLocalPlans() {
 	for _, each := range p.localPlans {
-		p.clog.Debug("adding local service plan", "service", each.ARN, "disabled", each.Disabled)
+		slog.Debug("adding local service plan", "service", each.ARN, "disabled", each.Disabled)
 		p.weekPlan.AddServicePlan(*each)
 	}
 }
@@ -136,7 +122,7 @@ func (p *PlanExecutor) applyLocalPlans() {
 func (p *PlanExecutor) createECSClient() error {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile(p.profile))
 	if err != nil {
-		p.clog.Error("config fail", "err", err)
+		slog.Error("config fail", "err", err)
 		return err
 	}
 	p.client = ecs.NewFromConfig(cfg)
@@ -147,9 +133,9 @@ func (p *PlanExecutor) fetchAllServices() ([]types.Service, error) {
 	if p.fetchedServices != nil {
 		return p.fetchedServices, nil
 	}
-	allServices, err := AllServices(p.clog, p.client)
+	allServices, err := AllServices(p.client)
 	if err != nil {
-		p.clog.Error("AllServices fail", "err", err)
+		slog.Error("AllServices fail", "err", err)
 		return nil, err
 	}
 	for _, each := range allServices {
@@ -159,14 +145,14 @@ func (p *PlanExecutor) fetchAllServices() ([]types.Service, error) {
 		}
 		sp := new(ServicePlan)
 		sp.ARN = *each.ServiceArn
-		p.clog.Debug("adding service plan", "service", *each.ServiceArn, "crons", input)
+		slog.Debug("adding service plan", "service", *each.ServiceArn, "crons", input)
 		if input == "" {
-			p.clog.Warn("invalid moneypenny tag value", "value", input, "err", err)
+			slog.Warn("invalid moneypenny tag value", "value", input, "err", err)
 			continue
 		}
 		chgs, err := ParseStateChanges(input)
 		if err != nil {
-			p.clog.Warn("invalid moneypenny tag value", "value", input, "err", err)
+			slog.Warn("invalid moneypenny tag value", "value", input, "err", err)
 			continue
 		}
 		sp.TagValue = input
@@ -188,43 +174,43 @@ func (p *PlanExecutor) exec() error {
 	slog.Info("executing", "time", now, "location", os.Getenv("TIME_ZONE"))
 	for _, each := range p.plans {
 		if each.Disabled {
-			p.clog.Warn("disabled plan", "service", each.ARN)
+			slog.Warn("disabled plan", "service", each.ARN)
 			continue
 		}
 		event, ok := p.weekPlan.LastScheduledEventAt(each.Service, now)
 		if ok {
-			lastStatus := ServiceStatus(p.clog, p.client, each.Service)
+			lastStatus := ServiceStatus(p.client, each.Service)
 			if lastStatus == Unknown {
 				exitsInCluster := slices.ContainsFunc(allServices, func(existing types.Service) bool {
 					return *existing.ServiceArn == each.ARN
 				})
 				if exitsInCluster {
-					p.clog.Info("service has unknown last status, assume it is stopped", "name", each.Service.Name())
+					slog.Info("service has unknown last status, assume it is stopped", "name", each.Service.Name())
 					lastStatus = Stopped
 				} else {
-					p.clog.Warn("service does not exist, update your configuration", "name", each.Service.Name())
+					slog.Warn("service does not exist, update your configuration", "name", each.Service.Name())
 					continue
 				}
 			}
 			isRunning := lastStatus == Running
 			if event.DesiredState != Running && isRunning {
-				p.clog.Info("[CHANGE] service is running but must be stopped", "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
+				slog.Info("[CHANGE] service is running but must be stopped", "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
 				if p.dryRun {
 					continue
 				}
-				if err := StopService(p.clog, p.client, each.Service); err != nil {
-					p.clog.Error("failed to stop service", "err", err, "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
+				if err := StopService(p.client, each.Service); err != nil {
+					slog.Error("failed to stop service", "err", err, "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
 				}
 			} else if event.DesiredState == Running && !isRunning {
-				p.clog.Info("[CHANGE] service must be running", "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
+				slog.Info("[CHANGE] service must be running", "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
 				if p.dryRun {
 					continue
 				}
-				if err := StartService(p.clog, p.client, each.Service); err != nil {
-					p.clog.Error("failed to start service", "err", err, "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
+				if err := StartService(p.client, each.Service, event.DesiredCount); err != nil {
+					slog.Error("failed to start service", "err", err, "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
 				}
 			} else {
-				p.clog.Info("service is in expected state", "name", each.Service.Name(), "state", event.DesiredState, "crons", each.TagValue)
+				slog.Info("service is in expected state", "name", each.Service.Name(), "state", event.DesiredState, "crons", each.TagValue)
 			}
 		}
 	}

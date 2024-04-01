@@ -30,8 +30,7 @@ func ParseCronSpec(s string) (CronSpec, error) {
 			}
 			c.DaysOfWeek = append(c.DaysOfWeek, time.Weekday(d))
 		}
-	}
-	if strings.Contains(dow, "-") {
+	} else if strings.Contains(dow, "-") {
 		dows := strings.Split(dow, "-")
 		d1, err := strconv.Atoi(dows[0])
 		if err != nil {
@@ -44,6 +43,13 @@ func ParseCronSpec(s string) (CronSpec, error) {
 		for d := d1; d <= d2; d++ {
 			c.DaysOfWeek = append(c.DaysOfWeek, time.Weekday(d))
 		}
+	} else {
+		// one
+		d, err := strconv.Atoi(dow)
+		if err != nil {
+			return c, err
+		}
+		c.DaysOfWeek = append(c.DaysOfWeek, time.Weekday(d))
 	}
 	return c, err
 }

@@ -83,6 +83,7 @@ func (w WeekPlan) ScheduledEventsOn(day time.Time) []ScheduledEvent {
 				event := ScheduledEvent{
 					Service:      tp.Service,
 					DesiredState: tp.DesiredState,
+					DesiredCount: tp.DesiredCount,
 					At:           witHourMinute(day, tp.Hour, tp.Minute),
 				}
 				events = append(events, event)

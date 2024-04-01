@@ -3,6 +3,7 @@ package mac
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -14,6 +15,7 @@ type ServicePlan struct {
 }
 type StateChange struct {
 	DesiredState string `json:"desired-state"`
+	DesiredCount int    `json:"desired-count"`
 	Cron         string `json:"cron"`
 	CronSpec     CronSpec
 }
@@ -41,7 +43,7 @@ func (t *ServicePlan) Validate() error {
 	return nil
 }
 
-// running=0 8 1-5. stopped=0 18 1-5.
+// running=0 8 1-5. stopped=0 18 1-5. count=2.
 func ParseStateChanges(input string) (list []*StateChange, err error) {
 	changeParts := strings.Split(strings.TrimSpace(input), ".")
 	for _, each := range changeParts {
@@ -75,6 +77,24 @@ func ParseStateChanges(input string) (list []*StateChange, err error) {
 				Cron:         expr,
 				CronSpec:     spec,
 			})
+		case "count":
+			expr := strings.Trim(stateParts[1], ".")
+			c, err := strconv.Atoi(expr)
+			if err != nil {
+				return list, fmt.Errorf("invalid spec for count:%w, expression:%q", err, expr)
+			}
+			// find running change
+			var run *StateChange
+			for _, each := range list {
+				if each.DesiredState == Running {
+					run = each
+					break
+				}
+			}
+			if run == nil {
+				return list, fmt.Errorf("no running change specified for count:%w, expression:%q", err, expr)
+			}
+			run.DesiredCount = c
 		default:
 			return list, errors.New("unknown state:" + stateParts[0])
 		}

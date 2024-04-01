@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log/slog"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -28,7 +27,7 @@ func (r *StatusWriter) WriteOn(plans []*ServicePlan, w io.Writer) error {
 	dd.Name = day.String()
 
 	for _, each := range plans {
-		status := ServiceStatus(slog.Default(), r.client, each.Service)
+		status := ServiceStatus(r.client, each.Service)
 		if status == "UNKNOWN" {
 			status = Stopped
 		}
