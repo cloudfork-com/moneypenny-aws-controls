@@ -103,3 +103,14 @@ func (r *Reporter) WriteStatusOn(w io.Writer) error {
 	}
 	return nil
 }
+
+func (r *Reporter) WriteControlsOn(w io.Writer) error {
+	content := `
+	<ul>
+		<li><a href="?do=plan&debug=true">Plan</a></li>
+		<li><a href="?do=apply&debug=true">Apply</a></li>
+	</ul>		
+`
+	fmt.Fprintln(w, content)
+	return nil
+}
