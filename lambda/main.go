@@ -41,7 +41,7 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		Level:              logLevel,
 		PassthroughHandler: stdoutHandler,
 		TableOnly:          true})
-	slog.SetDefault(slog.New(logHandler).With("version", Version))
+	slog.SetDefault(slog.New(logHandler).With("v", Version))
 
 	if err := mac.SetTimezone(os.Getenv("TIME_ZONE")); err != nil {
 		slog.Warn("failed to set timezone, using local", "err", err, "TIME_ZONE", os.Getenv("TIME_ZONE"))
@@ -65,6 +65,7 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 	case "plan":
 		pe.Plan()
 	default: // all
+		slog.Info("building schedule")
 		if err := pe.BuildWeekPlan(); err != nil {
 			logHandler.Close()
 			resp.StatusCode = 500

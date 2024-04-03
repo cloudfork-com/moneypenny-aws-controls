@@ -37,7 +37,7 @@ func NewPlanExecutor(localPlans []*ServicePlan, profile string) (*PlanExecutor, 
 }
 
 func setLogContext(action, profile string) {
-	clog := slog.With("exec", action)
+	clog := slog.With("x", action)
 	if profile != "" {
 		clog = clog.With("profile", profile)
 	}
