@@ -29,4 +29,5 @@ upgrade:
 
 upconfig:
 	aws lambda update-function-configuration --function-name MAC \
+	--timeout 60 \
 	--environment  "Variables={TIME_ZONE=Europe/Amsterdam}"
