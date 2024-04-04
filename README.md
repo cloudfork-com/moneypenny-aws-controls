@@ -50,8 +50,7 @@ Local enabled defined plans override the onces defined in AWS.
     },
     { 
         "service-arn": "arn:aws:ecs:eu-central-1:9111111:service/cluster/high-load",
-        "desired-tasks-count": 4,
-        "moneypenny": "running=0 7 1-5. stopped=0 22 1-5."
+        "moneypenny": "running=0 7 1-5. stopped=0 22 1-5. count=2."
     }
 ]
 ```
