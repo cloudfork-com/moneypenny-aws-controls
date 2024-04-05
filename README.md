@@ -61,3 +61,32 @@ Local enabled defined plans override the onces defined in AWS.
     }
 ]
 ```
+
+### AWS deployment
+
+Goto the folder `lambda` to find scripts and resources for deployment.
+
+
+#### create IAM Policy
+
+Create a policy named `moneypenny-aws-controls-policy` using permissions as defined in `iam-policy.json`.
+
+
+#### create IAM Role
+
+Create a role named `moneypenny-aws-controls-role`:
+
+- Trusted entity type = AWS Service
+- Service = Lambda
+- Policy = moneypenny-aws-controls-policy
+
+
+#### deploy Lambda service (ARM64)
+
+The `Makefile` has a `TIME_ZONE` environment variable you might need to change.
+
+```
+make compile 
+make zip
+ROLE=arn:aws:iam::111111111:role/moneypenny-aws-controls-role make create
+```
