@@ -32,6 +32,13 @@ To run a service indefinitely either remove or empty the tag or use:
 running=0 0 0-6.
 ```
 
+To disable one or all state changes, use the comment indicator `//`:
+```
+// running=0 8 1-5. stopped=0 18 1-5. count=4
+running=0 8 1-5. // stopped=0 18 1-5. count=4
+```
+
+
 ### Local config
 
 In `aws-service-plans.json` specify the services and cron expressions.

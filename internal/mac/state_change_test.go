@@ -33,11 +33,34 @@ func TestParseStateChangesWithCount(t *testing.T) {
 		t.Fatal("expect 7")
 	}
 }
+
+func TestParseStateChangesWithDisabled(t *testing.T) {
+	i := "// running=0 8 1-5. stopped=0 18 1-5. count=7."
+	list, err := ParseStateChanges(i)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 0 {
+		t.Fatal()
+	}
+}
+
+func TestParseStateChangesNoRunning(t *testing.T) {
+	i := "running=0 8 1-5. // stopped=0 18 1-5"
+	list, err := ParseStateChanges(i)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 1 {
+		t.Fatal()
+	}
+}
+
 func TestParseStateChangesWithCountNoRunning(t *testing.T) {
 	i := "count=9"
 	_, err := ParseStateChanges(i)
-	if err == nil {
-		t.Error("expected error")
+	if err != nil {
+		t.Error("unexpected error")
 	}
 }
 
