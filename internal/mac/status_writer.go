@@ -24,7 +24,7 @@ func (r *StatusWriter) WriteOn(plans []*ServicePlan, w io.Writer) error {
 	dd := DayData{}
 	day := now.Weekday()
 	dd.DayNumber = int(day)
-	dd.Name = day.String()
+	dd.Name = day.String() + " , " + now.Format(time.RFC3339)
 
 	for _, each := range plans {
 		status := ServiceStatus(r.client, each.Service)
