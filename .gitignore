@@ -5,3 +5,4 @@ cmd/awscontrols/Makefile
 lambda/bootstrap
 lambda/*.zip
 lambda/*.sh
+internal/mac/default-report.html

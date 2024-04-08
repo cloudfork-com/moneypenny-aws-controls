@@ -2,6 +2,9 @@
 
 Service to schedule ECS services by controlling the `desired-count` value.
 
+![doc/schedule.png]
+
+
 ## cron
 
 ```

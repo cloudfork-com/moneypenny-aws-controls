@@ -58,60 +58,57 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 	switch action {
 	case "apply":
 		pe.Apply()
+		// wait to allow state change
+		time.Sleep(1 * time.Second)
 	case "start":
 		pe.Start(req.QueryStringParameters["service-arn"])
+		// wait to allow state change
+		time.Sleep(1 * time.Second)
 	case "stop":
 		pe.Stop(req.QueryStringParameters["service-arn"])
+		// wait to allow state change
+		time.Sleep(1 * time.Second)
 	case "plan":
 		pe.Plan()
-	default: // all
-		slog.Info("building schedule")
-		if err := pe.BuildWeekPlan(); err != nil {
-			logHandler.Close()
-			resp.StatusCode = 500
-			resp.Body = logBuffer.String()
-			return resp, err
-		}
-		html := new(bytes.Buffer)
-		rep.WriteOpenHTMLOn(html)
-
-		fmt.Fprintln(html, "<h2>Moneypenny AWS Controls</h2>")
-		if err := rep.WriteControlsOn(html); err != nil {
-			logHandler.Close()
-			resp.StatusCode = 500
-			resp.Body = logBuffer.String()
-			return resp, err
-		}
-
-		fmt.Fprintln(html, "<h2>Status</h2>")
-		if err := rep.WriteStatusOn(html); err != nil {
-			logHandler.Close()
-			resp.StatusCode = 500
-			resp.Body = logBuffer.String()
-			return resp, err
-		}
-		fmt.Fprintln(html, "<h2>Schedule</h2>")
-		if err := rep.WriteScheduleOn(html); err != nil {
-			logHandler.Close()
-			resp.StatusCode = 500
-			resp.Body = logBuffer.String()
-			return resp, err
-		}
-		timezoneOn(html)
-		versionOn(html)
-		rep.WriteCloseHTMLOn(html)
-		resp.Body = html.String()
-		return resp, nil
 	}
-	// all but report
-	logHandler.Close()
+	slog.Info("building schedule")
+	if err := pe.BuildWeekPlan(); err != nil {
+		logHandler.Close()
+		resp.StatusCode = 500
+		resp.Body = logBuffer.String()
+		return resp, err
+	}
 	html := new(bytes.Buffer)
 	rep.WriteOpenHTMLOn(html)
+
+	if err := rep.WriteControlsOn(html); err != nil {
+		logHandler.Close()
+		resp.StatusCode = 500
+		resp.Body = logBuffer.String()
+		return resp, err
+	}
+
+	fmt.Fprintln(html, "<h2>Status</h2>")
+	if err := rep.WriteStatusOn(html); err != nil {
+		logHandler.Close()
+		resp.StatusCode = 500
+		resp.Body = logBuffer.String()
+		return resp, err
+	}
+	fmt.Fprintln(html, "<h2>Schedule</h2>")
+	if err := rep.WriteScheduleOn(html); err != nil {
+		logHandler.Close()
+		resp.StatusCode = 500
+		resp.Body = logBuffer.String()
+		return resp, err
+	}
+	fmt.Fprintln(html, "<h2>Log</h2>")
+	logHandler.Close()
 	html.WriteString(logBuffer.String())
+
 	timezoneOn(html)
 	versionOn(html)
 	rep.WriteCloseHTMLOn(html)
-
 	resp.Body = html.String()
 	return resp, nil
 }

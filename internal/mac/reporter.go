@@ -25,8 +25,13 @@ func (r *Reporter) Report() error {
 	}
 	rout, _ := os.Create(fmt.Sprintf("%s-report.html", r.executor.profile))
 	defer rout.Close()
+
 	slog.Info("write report")
+
 	r.WriteOpenHTMLOn(rout)
+
+	r.WriteControlsOn(rout)
+
 	fmt.Fprintln(rout, "<h2>Status</h2>")
 	if err := r.WriteStatusOn(rout); err != nil {
 		return err
@@ -106,10 +111,11 @@ func (r *Reporter) WriteStatusOn(w io.Writer) error {
 
 func (r *Reporter) WriteControlsOn(w io.Writer) error {
 	content := `
-	<ul>
-		<li><a href="?do=plan&debug=true">Plan</a></li>
-		<li><a href="?do=apply&debug=true">Apply</a></li>
-	</ul>		
+	<div class="controls">
+		<button type="button" onclick="location.href='?do=schedule'" >Refresh</button>
+		<button class="preferred" type="button" onclick="location.href='?do=plan&debug=true'" >Plan</button>
+		<button type="button" onclick="location.href='?do=apply&debug=true'" >Apply</button>
+	</div>
 `
 	fmt.Fprintln(w, content)
 	return nil
