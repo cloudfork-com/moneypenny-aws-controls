@@ -86,9 +86,18 @@ Create a role named `moneypenny-aws-controls-role`:
 #### deploy Lambda service (ARM64)
 
 The `Makefile` has a `TIME_ZONE` environment variable you might need to change.
+In the commands below, replace the ROLE arn with that of `moneypenny-aws-controls-role`.
 
 ```
 make compile 
 make zip
 ROLE=arn:aws:iam::111111111:role/moneypenny-aws-controls-role make create
 ```
+
+#### define apply schedule
+
+Using the Amazon EventBridge Scheduler you define a new schedule that targets the service.
+
+- create a new schedule called `apply-hourly-moneypenny-aws-controls`
+- set the cron expression to `5 * * * ? *` , which means run 5 minutes past every hour
+- set the target to the Lambda `moneypenny-aws-controls`
