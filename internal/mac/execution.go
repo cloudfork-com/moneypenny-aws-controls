@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"slices"
+	"strconv"
 	"time"
 
 	_ "embed"
@@ -76,6 +77,25 @@ func (p *PlanExecutor) Stop(serviceARN string) error {
 		return err
 	}
 	return StopService(p.client, Service{ARN: serviceARN})
+}
+
+func (p *PlanExecutor) ChangeTaskCount(serviceARN string, countInput string) error {
+	setLogContext("change-count", p.profile)
+	p.dryRun = false
+	if serviceARN == "" {
+		return errors.New("no service ARN was given")
+	}
+	if countInput == "" {
+		return errors.New("no count was given")
+	}
+	count, err := strconv.Atoi(countInput)
+	if err != nil {
+		return err
+	}
+	if err := p.createECSClient(); err != nil {
+		return err
+	}
+	return ChangeTaskCountOfService(p.client, Service{ARN: serviceARN}, count)
 }
 
 func (p *PlanExecutor) Report() error {
@@ -179,38 +199,50 @@ func (p *PlanExecutor) exec() error {
 		}
 		event, ok := p.weekPlan.LastScheduledEventAt(each.Service, now)
 		if ok {
-			lastStatus := ServiceStatus(p.client, each.Service)
+			howMany, lastStatus := ServiceStatus(p.client, each.Service)
+			clog := slog.With("name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue, "task-count", howMany)
+
 			if lastStatus == Unknown {
 				exitsInCluster := slices.ContainsFunc(allServices, func(existing types.Service) bool {
 					return *existing.ServiceArn == each.ARN
 				})
 				if exitsInCluster {
-					slog.Info("service has unknown last status, assume it is stopped", "name", each.Service.Name())
+					clog.Info("service has unknown last status, assume it is stopped")
 					lastStatus = Stopped
 				} else {
-					slog.Warn("service does not exist, update your configuration", "name", each.Service.Name())
+					clog.Warn("service does not exist, update your configuration")
 					continue
 				}
 			}
 			isRunning := lastStatus == Running
 			if event.DesiredState != Running && isRunning {
-				slog.Info("[CHANGE] service is running but must be stopped", "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
+				clog.Info(">> CHANGE: service is running but must be stopped")
 				if p.dryRun {
 					continue
 				}
 				if err := StopService(p.client, each.Service); err != nil {
-					slog.Error("failed to stop service", "err", err, "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
+					clog.Error("failed to stop service", "err", err)
 				}
 			} else if event.DesiredState == Running && !isRunning {
-				slog.Info("[CHANGE] service must be running", "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
+				clog.Info(">> CHANGE: service must be running")
 				if p.dryRun {
 					continue
 				}
 				if err := StartService(p.client, each.Service, event.DesiredCount); err != nil {
-					slog.Error("failed to start service", "err", err, "name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue)
+					clog.Error("failed to start service", "err", err)
 				}
 			} else {
-				slog.Info("service is in expected state", "name", each.Service.Name(), "state", event.DesiredState, "crons", each.TagValue)
+				if isRunning && event.DesiredCount != howMany {
+					clog.Info(">> CHANGE: service must have different task count", "desired", event.DesiredCount)
+					if p.dryRun {
+						continue
+					}
+					if err := ChangeTaskCountOfService(p.client, each.Service, event.DesiredCount); err != nil {
+						clog.Error("failed to change task count of service", "err", err)
+					}
+				} else {
+					clog.Info("service is in expected state")
+				}
 			}
 		}
 	}

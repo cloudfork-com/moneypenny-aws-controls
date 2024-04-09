@@ -109,6 +109,7 @@ func (w WeekPlan) LastScheduledEventAt(service Service, when time.Time) (Schedul
 					event.At = changeAt
 					event.Service = tp.Service
 					event.DesiredState = tp.DesiredState
+					event.DesiredCount = tp.DesiredCount
 				}
 				if changeAt.After(when) {
 					return event, true

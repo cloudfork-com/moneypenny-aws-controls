@@ -40,7 +40,7 @@ func (r ScheduleWriter) WriteOn(profile string, wp *WeekPlan, w io.Writer) error
 	if err != nil {
 		return err
 	}
-	wd := WeekData{Profile: profile, StateLabel: "Desired State"}
+	wd := WeekData{Profile: profile, StateLabel: "Desired State", TasksLabel: "# Tasks"}
 	for d := 0; d < 7; d++ {
 		dd := DayData{}
 		day := time.Weekday(d)
@@ -53,9 +53,11 @@ func (r ScheduleWriter) WriteOn(profile string, wp *WeekPlan, w io.Writer) error
 			td.Plan = tp
 			td.Cron = "?"
 			td.RowClass = "stopped"
+			td.TasksCount = 0
 			td.Cron = tp.cron
 			if tp.DesiredState == Running {
 				td.RowClass = "running"
+				td.TasksCount = tp.DesiredCount
 			}
 			if tp.doesNotExist {
 				td.RowClass = "absent"
@@ -74,6 +76,7 @@ type WeekData struct {
 	Profile    string
 	Days       []DayData
 	StateLabel string
+	TasksLabel string
 }
 type DayData struct {
 	Name      string
@@ -84,6 +87,7 @@ type TimeData struct {
 	RowClass    string
 	Plan        *TimePlan
 	ServiceName string
+	TasksCount  int
 	ClusterName string
 	Cron        string
 	Links       []LinkData

@@ -1,4 +1,5 @@
 {{$stateLabel := .StateLabel}}
+{{$tasksLabel := .TasksLabel}}
 {{ range .Days }}
 <h3>
     <svg width="16" height="19" viewBox="0 0 16 19" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -15,6 +16,7 @@
     <tr>
         <th>Time</th>
         <th>{{$stateLabel}}</th>
+        <th>{{$tasksLabel}}</th>
         <th>Service</th>
         <th>Cluster</th>
         <th>Cron</th>
@@ -23,9 +25,9 @@
     {{ range .Times }}
     <tr class="{{.RowClass}}">
         <td>{{twoDigits .Plan.Hour}}:{{twoDigits .Plan.Minute}}</td>
-        <td>{{.Plan.DesiredState}}</td>
-        <td>{{.ServiceName}}
-        </td>
+        <td class="state">{{.Plan.DesiredState}}</td>
+        <td class="count">{{.TasksCount}}</td>
+        <td>{{.ServiceName}}</td>
         <td>{{.ClusterName}}</td>
         <td>{{.Cron}}</td>
         <td>

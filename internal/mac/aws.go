@@ -91,22 +91,18 @@ func TasksForService(client *ecs.Client, clusterARN, shortServiceName string) ([
 	return allInfos.Tasks, nil
 }
 
-func StopTask(client *ecs.Client, task types.Task) error {
-	slog.Info("stopping task", "arn", *task.TaskArn)
-	_, err := client.StopTask(context.Background(), &ecs.StopTaskInput{
-		Task:    task.TaskArn,
-		Cluster: task.ClusterArn,
-		Reason:  aws.String("moneypenny-aws-controls"),
-	})
-	return err
-}
-
 func StartService(client *ecs.Client, service Service, desiredTaskCount int) error {
 	slog.Info("starting service", "arn", service.ARN)
 	count := int32(desiredTaskCount)
 	if count == 0 { //unspecified
 		count = 1
 	}
+	return ChangeTaskCountOfService(client, service, int(count))
+}
+
+func ChangeTaskCountOfService(client *ecs.Client, service Service, desiredTaskCount int) error {
+	slog.Info("changing tasks count of service", "arn", service.ARN, "count", desiredTaskCount)
+	count := int32(desiredTaskCount)
 	_, err := client.UpdateService(context.Background(), &ecs.UpdateServiceInput{
 		Service:      aws.String(service.Name()),
 		DesiredCount: aws.Int32(count),
@@ -117,33 +113,16 @@ func StartService(client *ecs.Client, service Service, desiredTaskCount int) err
 
 func StopService(client *ecs.Client, service Service) error {
 	slog.Info("stopping service", "arn", service.ARN)
-	_, err := client.UpdateService(context.Background(), &ecs.UpdateServiceInput{
-		Service:      aws.String(service.Name()),
-		DesiredCount: aws.Int32(0),
-		Cluster:      aws.String(service.ClusterARN()),
-	})
-	if err != nil {
-		return err
-	}
-	all, err := TasksForService(client, service.ClusterARN(), service.Name())
-	if err != nil {
-		return err
-	}
-	for _, each := range all {
-		if err := StopTask(client, each); err != nil {
-			return err
-		}
-	}
-	return nil
+	return ChangeTaskCountOfService(client, service, 0)
 }
 
-func ServiceStatus(client *ecs.Client, service Service) string {
+func ServiceStatus(client *ecs.Client, service Service) (int, string) {
 	// at least one task must be running
 	tasks, _ := TasksForService(client, service.ClusterARN(), service.Name())
 	for _, each := range tasks {
 		if each.LastStatus != nil {
-			return *each.LastStatus
+			return len(tasks), *each.LastStatus
 		}
 	}
-	return Unknown
+	return 0, Unknown
 }

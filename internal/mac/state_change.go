@@ -43,6 +43,7 @@ func ParseStateChanges(input string) (list []*StateChange, err error) {
 			}
 			list = append(list, &StateChange{
 				DesiredState: Running,
+				DesiredCount: 1,
 				Cron:         expr,
 				CronSpec:     spec,
 			})
@@ -54,6 +55,7 @@ func ParseStateChanges(input string) (list []*StateChange, err error) {
 			}
 			list = append(list, &StateChange{
 				DesiredState: Stopped,
+				DesiredCount: 0,
 				Cron:         expr,
 				CronSpec:     spec,
 			})

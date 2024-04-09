@@ -70,6 +70,8 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		time.Sleep(1 * time.Second)
 	case "plan":
 		pe.Plan()
+	case "change-count":
+		pe.ChangeTaskCount(req.QueryStringParameters["service-arn"], req.QueryStringParameters["count"])
 	}
 	slog.Info("building schedule")
 	if err := pe.BuildWeekPlan(); err != nil {
