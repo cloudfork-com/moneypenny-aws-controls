@@ -60,18 +60,35 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		pe.Apply()
 		// wait to allow state change
 		time.Sleep(1 * time.Second)
+		logHandler.Close()
+		resp.Body = wrapLog(logBuffer.String(), rep)
+		return resp, nil
 	case "start":
 		pe.Start(req.QueryStringParameters["service-arn"])
 		// wait to allow state change
 		time.Sleep(1 * time.Second)
+		logHandler.Close()
+		resp.Body = wrapLog(logBuffer.String(), rep)
+		return resp, nil
 	case "stop":
 		pe.Stop(req.QueryStringParameters["service-arn"])
 		// wait to allow state change
 		time.Sleep(1 * time.Second)
+		logHandler.Close()
+		resp.Body = wrapLog(logBuffer.String(), rep)
+		return resp, nil
 	case "plan":
 		pe.Plan()
+		logHandler.Close()
+		resp.Body = wrapLog(logBuffer.String(), rep)
+		return resp, nil
 	case "change-count":
+		// wait to allow state change
+		time.Sleep(1 * time.Second)
 		pe.ChangeTaskCount(req.QueryStringParameters["service-arn"], req.QueryStringParameters["count"])
+		logHandler.Close()
+		resp.Body = wrapLog(logBuffer.String(), rep)
+		return resp, nil
 	}
 	slog.Info("building schedule")
 	if err := pe.BuildWeekPlan(); err != nil {
@@ -104,15 +121,23 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		resp.Body = logBuffer.String()
 		return resp, err
 	}
-	fmt.Fprintln(html, "<h2>Log</h2>")
-	logHandler.Close()
-	html.WriteString(logBuffer.String())
-
 	timezoneOn(html)
 	versionOn(html)
 	rep.WriteCloseHTMLOn(html)
 	resp.Body = html.String()
 	return resp, nil
+}
+
+func wrapLog(logContent string, rep *mac.Reporter) string {
+	html := new(bytes.Buffer)
+	rep.WriteOpenHTMLOn(html)
+	rep.WriteControlsOn(html)
+	fmt.Fprintln(html, "<h2>Log</h2>")
+	html.WriteString(logContent)
+	timezoneOn(html)
+	versionOn(html)
+	rep.WriteCloseHTMLOn(html)
+	return html.String()
 }
 
 func removeTimeAndLevel(groups []string, a slog.Attr) slog.Attr {
