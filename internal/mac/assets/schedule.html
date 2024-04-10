@@ -20,7 +20,7 @@
         <th>Service</th>
         <th>Cluster</th>
         <th>Cron</th>
-        <th></th>
+        <th>Actions</th>
     </tr>
     {{ range .Times }}
     <tr class="{{.RowClass}}">
@@ -32,7 +32,7 @@
         <td>{{.Cron}}</td>
         <td>
             {{ range .Links }}
-            <a href="{{.Href}}" target="_blank">{{.Title}}</a>
+            <button class="rowaction" type="button" onclick="location.href='{{.Href}}'">{{.Title}}</button>
             {{ end }}
         </td>
         </td>

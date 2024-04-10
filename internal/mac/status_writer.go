@@ -51,6 +51,17 @@ func (r *StatusWriter) WriteOn(plans []*ServicePlan, w io.Writer) error {
 			link := LinkData{Href: template.URL(fmt.Sprintf("?do=start&service-arn=%s", each.Service.ARN)), Title: "Start service"}
 			timeData.Links = append(timeData.Links, link)
 		} else {
+			link := LinkData{
+				Href:  template.URL(fmt.Sprintf("?do=stop&service-arn=%s", each.Service.ARN)),
+				Title: "Stop service"}
+			timeData.Links = append(timeData.Links, link)
+
+		}
+		link := LinkData{Href: template.URL(each.TagsURL()), Title: "Manage tags"}
+		timeData.Links = append(timeData.Links, link)
+
+		// Up or downscale
+		if status == Running {
 			// check against desired count
 			desired := each.DesiredCountAt(now)
 			if desired > howMany {
@@ -64,14 +75,7 @@ func (r *StatusWriter) WriteOn(plans []*ServicePlan, w io.Writer) error {
 					Title: "Downscale (1) service"}
 				timeData.Links = append(timeData.Links, link)
 			}
-			link := LinkData{
-				Href:  template.URL(fmt.Sprintf("?do=stop&service-arn=%s", each.Service.ARN)),
-				Title: "Stop service"}
-			timeData.Links = append(timeData.Links, link)
 		}
-		link := LinkData{Href: template.URL(each.TagsURL()), Title: "Manage tags"}
-		timeData.Links = append(timeData.Links, link)
-
 		dd.Times = append(dd.Times, timeData)
 	}
 	wd.Days = append(wd.Days, dd)
