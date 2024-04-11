@@ -63,8 +63,6 @@ func (r ScheduleWriter) WriteOn(profile string, wp *WeekPlan, w io.Writer) error
 				td.RowClass = "absent"
 				td.ServiceName = "MISSING: " + td.ServiceName
 			}
-			link := LinkData{Href: template.URL(tp.TagsURL()), Title: "Manage tags"}
-			td.Links = append(td.Links, link)
 			dd.Times = append(dd.Times, td)
 		}
 		wd.Days = append(wd.Days, dd)

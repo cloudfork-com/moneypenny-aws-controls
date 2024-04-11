@@ -148,7 +148,7 @@ func removeTimeAndLevel(groups []string, a slog.Attr) slog.Attr {
 }
 
 func versionOn(w io.Writer) {
-	fmt.Fprintf(w, "<p style='font-size: 10px;'>moneypenny-aws-controls: %s</p>", Version)
+	fmt.Fprintf(w, "<p style='font-size: 10px;'><a href='https://github.com/cloudfork-com/moneypenny-aws-controls'>moneypenny-aws-controls</a> version: %s</p>", Version)
 }
 
 func timezoneOn(w io.Writer) {
