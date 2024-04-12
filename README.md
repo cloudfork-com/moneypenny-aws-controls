@@ -85,6 +85,14 @@ Using the Amazon EventBridge Scheduler you define a new schedule that targets th
 - create a new schedule called `apply-hourly-moneypenny-aws-controls`
 - set the cron expression to `5 * * * ? *` , which means run 5 minutes past every hour
 - set the target to the Lambda `moneypenny-aws-controls`
+- set the payload to:
+```
+{
+    "queryStringParameters":{
+        "do":"apply"
+    }
+}
+```
 
 ### Local config
 
