@@ -170,14 +170,10 @@ func (p *PlanExecutor) fetchAllServices() ([]types.Service, error) {
 			slog.Warn("invalid moneypenny tag value", "value", input, "err", err)
 			continue
 		}
-		chgs, err := ParseStateChanges(input)
-		if err != nil {
-			slog.Warn("invalid moneypenny tag value", "value", input, "err", err)
-			sp.TagError = "BAD SYNTAX: " + input
-			sp.Disabled = true
-		}
 		sp.TagValue = input
-		sp.StateChanges = chgs
+		if err := sp.Validate(); err != nil {
+			slog.Warn("invalid moneypenny tag value", "value", input, "err", err)
+		}
 		p.plans = append(p.plans, sp)
 		p.weekPlan.AddServicePlan(*sp)
 	}

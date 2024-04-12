@@ -13,11 +13,13 @@
 <table>
     <tr>
         <th>Time</th>
-        <th>Desired state</th>
-        <th># Desired tasks</th>
+        <th>Actual state</th>
+        <th># Active tasks</th>
         <th>Service</th>
+        <th>Savings</th>
         <th>Cluster</th>
-        <th>Cron</th>
+        <th>State changes</th>
+        <th>Actions</th>
     </tr>
     {{ range .Times }}
     <tr class="{{.RowClass}}">
@@ -25,8 +27,15 @@
         <td class="state">{{.Plan.DesiredState}}</td>
         <td class="count">{{.TasksCount}}</td>
         <td>{{.ServiceName}}</td>
+        <td>{{.Savings}}</td>
         <td>{{.ClusterName}}</td>
         <td>{{.Cron}}</td>
+        <td>
+            {{ range .Links }}
+            <button class="rowaction" type="button" onclick="window.open('{{.Href}}', '_blank');">{{.Title}}</button>
+            {{ end }}
+        </td>
+        </td>
     </tr>
     {{ end }}
 </table>

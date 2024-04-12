@@ -20,6 +20,9 @@ func (w *WeekPlan) AddServicePlan(p ServicePlan) {
 			w.planOfDay(day).AddStateChange(p.Service, each)
 		}
 	}
+	for _, each := range w.Plans {
+		each.SortPlans()
+	}
 }
 
 func (w *WeekPlan) TimePlansDo(block func(tp *TimePlan)) {

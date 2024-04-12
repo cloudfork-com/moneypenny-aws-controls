@@ -21,6 +21,15 @@ func (c CronSpec) String() string {
 	return fmt.Sprintf("%d %d %v", c.Minute, c.Hour, c.DaysOfWeek)
 }
 
+func (c CronSpec) IsEffectiveOnWeekday(w time.Weekday) bool {
+	for _, dow := range c.DaysOfWeek {
+		if dow == w {
+			return true
+		}
+	}
+	return false
+}
+
 func ParseCronSpec(s string) (CronSpec, error) {
 	var c CronSpec
 	var dow string

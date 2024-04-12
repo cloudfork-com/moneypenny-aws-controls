@@ -1,26 +1,49 @@
 package mac
 
 import (
+	_ "embed"
 	"fmt"
 	"html/template"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/emicklei/tre"
 )
 
+//go:embed assets/status.html
+var statusHTML string
+
 type StatusWriter struct {
 	client *ecs.Client
 }
 
+func (r *StatusWriter) statusTemplate() (*template.Template, error) {
+	tmpl := template.New("status")
+	tmpl = tmpl.Funcs(template.FuncMap{
+		"twoDigits": func(i int) string {
+			s := strconv.Itoa(i)
+			if len(s) == 1 {
+				return "0" + s
+			} else {
+				return s
+			}
+		}})
+	tmpl, err := tmpl.Parse(statusHTML)
+	if err != nil {
+		return nil, tre.New(err, "parse template fail")
+	}
+	return tmpl, nil
+}
+
 func (r *StatusWriter) WriteOn(plans []*ServicePlan, w io.Writer) error {
-	tmpl, err := ScheduleWriter{}.scheduleTemplate()
+	tmpl, err := r.statusTemplate()
 	if err != nil {
 		return err
 	}
 	now := time.Now().In(userLocation)
-	wd := WeekData{StateLabel: "Actual State", TasksLabel: "Active Tasks"}
+	wd := WeekData{}
 	dd := DayData{}
 	day := now.Weekday()
 	dd.DayNumber = int(day)
@@ -41,6 +64,7 @@ func (r *StatusWriter) WriteOn(plans []*ServicePlan, w io.Writer) error {
 		timeData := TimeData{
 			RowClass:   rowClass,
 			TasksCount: howMany,
+			Savings:    fmt.Sprintf("%d%%", 100-int(each.PercentageRunning()*100.0)),
 			Plan: &TimePlan{
 				DesiredState: status,
 				Hour:         now.Hour(),

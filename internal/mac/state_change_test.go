@@ -86,3 +86,14 @@ func TestParseStateChangesInvalid(t *testing.T) {
 	}
 	t.Log(err.Error())
 }
+
+func TestParseStateChangesMultiRunMultiStop(t *testing.T) {
+	i := "running=0 0 1-5. stopped=0 10 1-5. running=0 4 2-6. stopped=0 6 3/4."
+	cs, err := ParseStateChanges(i)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cs) != 4 {
+		t.Fatal("expect 4")
+	}
+}

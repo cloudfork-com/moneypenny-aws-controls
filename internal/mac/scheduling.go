@@ -3,6 +3,7 @@ package mac
 import (
 	"fmt"
 	"path"
+	"slices"
 	"strings"
 	"time"
 )
@@ -66,6 +67,12 @@ func (d *DayPlan) AddStateChange(service Service, change *StateChange) {
 		DesiredState: change.DesiredState,
 		DesiredCount: change.DesiredCount,
 		cron:         change.Cron,
+	})
+}
+
+func (d *DayPlan) SortPlans() {
+	slices.SortFunc(d.Plans, func(s1, s2 *TimePlan) int {
+		return intCompare(s1.Hour*60+s1.Minute, s2.Hour*60+s2.Minute)
 	})
 }
 

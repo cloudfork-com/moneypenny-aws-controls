@@ -40,7 +40,7 @@ func (r ScheduleWriter) WriteOn(profile string, wp *WeekPlan, w io.Writer) error
 	if err != nil {
 		return err
 	}
-	wd := WeekData{Profile: profile, StateLabel: "Desired State", TasksLabel: "# Tasks"}
+	wd := WeekData{Profile: profile}
 	for d := 0; d < 7; d++ {
 		dd := DayData{}
 		day := time.Weekday(d)
@@ -71,10 +71,8 @@ func (r ScheduleWriter) WriteOn(profile string, wp *WeekPlan, w io.Writer) error
 }
 
 type WeekData struct {
-	Profile    string
-	Days       []DayData
-	StateLabel string
-	TasksLabel string
+	Profile string
+	Days    []DayData
 }
 type DayData struct {
 	Name      string
@@ -89,6 +87,7 @@ type TimeData struct {
 	ClusterName string
 	Cron        string
 	Links       []LinkData
+	Savings     string
 }
 type LinkData struct {
 	Href  template.URL

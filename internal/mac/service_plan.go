@@ -1,24 +1,91 @@
 package mac
 
-import "time"
+import (
+	"slices"
+	"time"
+)
 
 type ServicePlan struct {
 	Service
 	TagValue     string         `json:"moneypenny"`
-	StateChanges []*StateChange `json:"state-changes"`
+	StateChanges []*StateChange `json:"state-changes"` // sorted by time on day
 	Disabled     bool           `json:"disabled"`
 	TagError     string         `json:"-"`
+}
+
+func (t *ServicePlan) PercentageRunning() float32 {
+	if len(t.StateChanges) == 0 {
+		return 1.0 // assume running all the time
+	}
+	weekMinutes := 24 * 7 * 60
+	dayMinutes := 24 * 60
+	runMinutes := 0
+	wp := new(WeekPlan)
+	wp.AddServicePlan(*t)
+	lastState := ""
+	var planThatSetLast *TimePlan
+	d := 0
+	for {
+		startMinutesRun := 0
+		dp := wp.planOfDay(time.Weekday(d % 7))
+		for _, tp := range dp.Plans {
+			if tp.DesiredState == Running {
+				startMinutesRun = tp.Hour*60 + tp.Minute
+				if lastState == Running {
+					runMinutes += startMinutesRun
+				}
+				// did we ran all plans?
+				if planThatSetLast == tp {
+					goto end
+				}
+				if lastState == "" {
+					planThatSetLast = tp
+				}
+				lastState = Running
+			}
+			if tp.DesiredState == Stopped {
+				if lastState == Running {
+					stopMinutesRun := tp.Hour*60 + tp.Minute
+					runMinutes += stopMinutesRun - startMinutesRun
+				}
+				// did we ran all plans?
+				if planThatSetLast == tp {
+					if lastState == Running {
+						stopMinutesRun := tp.Hour*60 + tp.Minute
+						runMinutes += stopMinutesRun - startMinutesRun
+					}
+					goto end
+				}
+				if lastState == "" {
+					planThatSetLast = tp
+				}
+				lastState = Stopped
+			}
+		}
+		if lastState == Running {
+			runMinutes += dayMinutes - startMinutesRun
+		}
+		d++
+	}
+end:
+	return float32(runMinutes) / float32(weekMinutes)
 }
 
 func (t *ServicePlan) Validate() error {
 	if t.TagValue != "" {
 		chgs, err := ParseStateChanges(t.TagValue)
 		if err != nil {
+			t.TagError = "BAD SYNTAX: " + t.TagValue
+			t.Disabled = true
 			return err
 		}
+		slices.SortFunc(chgs, func(a, b *StateChange) int {
+			return intCompare(a.CronSpec.Hour+a.CronSpec.Minute*60, b.CronSpec.Hour+b.CronSpec.Minute*60)
+		})
 		t.StateChanges = chgs
 		return nil
 	}
+	// this exists when reading from file
 	for _, each := range t.StateChanges {
 		spec, err := ParseCronSpec(each.Cron)
 		if err != nil {
@@ -31,8 +98,12 @@ func (t *ServicePlan) Validate() error {
 
 func (t *ServicePlan) DesiredCountAt(when time.Time) int {
 	minutesToday := when.Hour()*60 + when.Minute()
+	weekDay := when.Weekday()
 	desired := 0
 	for _, each := range t.StateChanges {
+		if !each.CronSpec.IsEffectiveOnWeekday(weekDay) {
+			continue
+		}
 		changeToday := each.CronSpec.Hour*60 + each.CronSpec.Minute
 		if changeToday > minutesToday {
 			return desired
@@ -47,4 +118,4 @@ func (t *ServicePlan) CronLabel() string {
 		return t.TagError
 	}
 	return t.TagValue
-} 
+}
