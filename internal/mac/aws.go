@@ -100,6 +100,16 @@ func StartService(client *ecs.Client, service Service, desiredTaskCount int) err
 	return ChangeTaskCountOfService(client, service, int(count))
 }
 
+func StopTask(client *ecs.Client, task types.Task) error {
+	slog.Info("stopping task", "arn", *task.TaskArn)
+	_, err := client.StopTask(context.Background(), &ecs.StopTaskInput{
+		Task:    task.TaskArn,
+		Cluster: task.ClusterArn,
+		Reason:  aws.String("moneypenny-aws-controls"),
+	})
+	return err
+}
+
 func ChangeTaskCountOfService(client *ecs.Client, service Service, desiredTaskCount int) error {
 	slog.Info("changing tasks count of service", "arn", service.ARN, "count", desiredTaskCount)
 	count := int32(desiredTaskCount)
@@ -113,7 +123,18 @@ func ChangeTaskCountOfService(client *ecs.Client, service Service, desiredTaskCo
 
 func StopService(client *ecs.Client, service Service) error {
 	slog.Info("stopping service", "arn", service.ARN)
-	return ChangeTaskCountOfService(client, service, 0)
+	if err := ChangeTaskCountOfService(client, service, 0); err != nil {
+		return err
+	}
+	// stop tasks ourselves instead of waiting for ECS to apply the change
+	tasks, err := TasksForService(client, service.ClusterARN(), service.Name())
+	if err != nil {
+		return err
+	}
+	for _, each := range tasks {
+		StopTask(client, each)
+	}
+	return nil
 }
 
 func ServiceStatus(client *ecs.Client, service Service) (int, string) {

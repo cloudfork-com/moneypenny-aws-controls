@@ -7,6 +7,7 @@ type ServicePlan struct {
 	TagValue     string         `json:"moneypenny"`
 	StateChanges []*StateChange `json:"state-changes"`
 	Disabled     bool           `json:"disabled"`
+	TagError     string         `json:"-"`
 }
 
 func (t *ServicePlan) Validate() error {
@@ -40,3 +41,10 @@ func (t *ServicePlan) DesiredCountAt(when time.Time) int {
 	}
 	return desired
 }
+
+func (t *ServicePlan) CronLabel() string {
+	if t.TagError != "" {
+		return t.TagError
+	}
+	return t.TagValue
+} 

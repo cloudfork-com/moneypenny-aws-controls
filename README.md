@@ -6,18 +6,19 @@ Service to schedule ECS services by controlling the `desired-count` value.
 
 ## cron
 
+Each state change (running,stopped) requires a simplified cron expression.
 ```
  "0 15 1-5"
  ```
 
  - minute, 0..59
  - hour, 0..23
- - day of week, use range "2-3" or comma separated values "1,2,3,4". Sunday=0
-
+ - day of week, use range "2-3" or slash separated values "1/2/3/4". Sunday=0
 
 ### AWS tag
 
-Using a tag with key `moneypenny`, you can specify the cron expressions for both `running` and `stopped` states.
+Using a tag with key `moneypenny`, you can specify the cron expressions for both `running` and `stopped` state changes.
+Append a dot `.` to seperate each statement (running,stopped,count).
 
 To run a service between 08:00 and 18:00 on workdays (1=Monday,5=Friday), use:
 ```
@@ -29,7 +30,7 @@ To stop a service indefinitely, use:
 stopped=0 0 0-6.
 ```
 
-To run a service indefinitely either remove or empty the tag or use:
+To run a service indefinitely either remove, empty, comment the tag or use:
 ```
 running=0 0 0-6.
 ```
@@ -39,6 +40,8 @@ To disable one or all state changes, use the comment indicator `//`:
 // running=0 8 1-5. stopped=0 18 1-5. count=4
 running=0 8 1-5. // stopped=0 18 1-5. count=4
 ```
+
+Run `Schedule` to see the planned effect.
 
 ### AWS deployment
 
@@ -54,7 +57,7 @@ Create a policy named `moneypenny-aws-controls-policy` using permissions as defi
 Create a role named `moneypenny-aws-controls-role`:
 
 - Trusted entity type = AWS Service
-- Service = Lambda
+- Use case, Service = Lambda
 - Policy = moneypenny-aws-controls-policy
 
 #### deploy Lambda service (ARM64)
@@ -67,6 +70,13 @@ make compile
 make zip
 ROLE=arn:aws:iam::111111111:role/moneypenny-aws-controls-role make create
 ```
+
+### add trigger for Lambda service (API Gateway)
+
+- create a new API Gateway HTTP API
+- set Security to ...
+
+Now you have an API endpoint that you can visit to see the current Schedule.
 
 #### define apply schedule
 

@@ -2,10 +2,14 @@ package mac
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 )
+
+const daySeparator = "/"
+const rangeSeparator = "-"
 
 // minute hour day of week numbers
 type CronSpec struct {
@@ -21,17 +25,21 @@ func ParseCronSpec(s string) (CronSpec, error) {
 	var c CronSpec
 	var dow string
 	_, err := fmt.Sscanf(s, "%d %d %s", &c.Minute, &c.Hour, &dow)
-	if strings.Contains(dow, ",") {
-		dows := strings.Split(dow, ",")
+	if strings.Contains(dow, daySeparator) {
+		dows := strings.Split(dow, daySeparator)
 		for _, dow := range dows {
 			d, err := strconv.Atoi(dow)
 			if err != nil {
 				return c, err
 			}
-			c.DaysOfWeek = append(c.DaysOfWeek, time.Weekday(d))
+			wd := time.Weekday(d)
+			if slices.Contains(c.DaysOfWeek, wd) {
+				return c, fmt.Errorf("duplicate day of week %d", wd)
+			}
+			c.DaysOfWeek = append(c.DaysOfWeek, wd)
 		}
-	} else if strings.Contains(dow, "-") {
-		dows := strings.Split(dow, "-")
+	} else if strings.Contains(dow, rangeSeparator) {
+		dows := strings.Split(dow, rangeSeparator)
 		d1, err := strconv.Atoi(dows[0])
 		if err != nil {
 			return c, err

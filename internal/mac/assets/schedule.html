@@ -32,7 +32,7 @@
         <td>{{.Cron}}</td>
         <td>
             {{ range .Links }}
-            <button class="rowaction" type="button" onclick="location.href='{{.Href}}'">{{.Title}}</button>
+            <button class="rowaction" type="button" onclick="window.open('{{.Href}}', '_blank');">{{.Title}}</button>
             {{ end }}
         </td>
         </td>

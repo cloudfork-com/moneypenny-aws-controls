@@ -35,6 +35,9 @@ func (r *StatusWriter) WriteOn(plans []*ServicePlan, w io.Writer) error {
 		if status == Stopped {
 			rowClass = "stopped"
 		}
+		if each.Disabled {
+			rowClass = "disabled"
+		}
 		timeData := TimeData{
 			RowClass:   rowClass,
 			TasksCount: howMany,
@@ -45,7 +48,7 @@ func (r *StatusWriter) WriteOn(plans []*ServicePlan, w io.Writer) error {
 			},
 			ServiceName: each.Name(),
 			ClusterName: each.ClusterName(),
-			Cron:        each.TagValue,
+			Cron:        each.CronLabel(),
 		}
 		if status == Stopped {
 			link := LinkData{Href: template.URL(fmt.Sprintf("?do=start&service-arn=%s", each.Service.ARN)), Title: "Start service"}

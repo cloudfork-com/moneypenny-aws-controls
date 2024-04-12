@@ -173,7 +173,8 @@ func (p *PlanExecutor) fetchAllServices() ([]types.Service, error) {
 		chgs, err := ParseStateChanges(input)
 		if err != nil {
 			slog.Warn("invalid moneypenny tag value", "value", input, "err", err)
-			continue
+			sp.TagError = "INVALID: " + input
+			sp.Disabled = true
 		}
 		sp.TagValue = input
 		sp.StateChanges = chgs
