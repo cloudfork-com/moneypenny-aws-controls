@@ -51,7 +51,7 @@ To disable one or all state changes, use the comment indicator `//`:
 running=0 8 1-5. // stopped=0 18 1-5. count=4
 ```
 
-Run `Schedule` to see the planned effect.
+Run `Schedule` or `Plan` to see the planned effect.
 
 ### AWS deployment
 
