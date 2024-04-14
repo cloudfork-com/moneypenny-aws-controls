@@ -2,6 +2,7 @@ package mac
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"slices"
 	"strings"
@@ -27,9 +28,12 @@ func (s Service) ClusterName() string {
 	return path.Base(s.ClusterARN())
 }
 
-// https://eu-central-1.console.aws.amazon.com/ecs/v2/clusters/CICD/services/cockpit-cockpit-dev/tags?region=eu-central-1
+// https://eu-central-1.console.aws.amazon.com/ecs/v2/clusters/C/services/S/tags?region=eu-central-1
 func (s Service) TagsURL() string {
-	region := "eu-central-1" // from ENV
+	region := "eu-central-1"                   // default
+	if r := os.Getenv("AWS_REGION"); r != "" { // Reserved Environment Variables by AWS Lambda
+		region = r
+	}
 	return fmt.Sprintf("https://%s.console.aws.amazon.com/ecs/v2/clusters/%s/services/%s/tags?region=%s",
 		region, s.ClusterName(), s.Name(), region)
 }
