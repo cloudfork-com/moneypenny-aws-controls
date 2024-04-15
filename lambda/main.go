@@ -42,9 +42,15 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		PassthroughHandler: stdoutHandler,
 		TableOnly:          true})
 	slog.SetDefault(slog.New(logHandler).With("v", Version))
-
+	// dump available environment variables
+	if isDebug {
+		for _, each := range os.Environ() {
+			slog.Debug("env", "entry", each)
+		}
+	}
+	// timezone setup
 	if err := mac.SetTimezone(os.Getenv("TIME_ZONE")); err != nil {
-		slog.Warn("failed to set timezone, using local", "err", err, "TIME_ZONE", os.Getenv("TIME_ZONE"))
+		slog.Warn("failed to set timezone, using local", "err", err, "local", time.Local.String(), "TIME_ZONE", os.Getenv("TIME_ZONE"))
 	}
 	pe, err := mac.NewPlanExecutor([]*mac.ServicePlan{}, "") // default profile
 	if err != nil {
