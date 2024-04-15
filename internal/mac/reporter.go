@@ -113,8 +113,8 @@ func (r *Reporter) WriteControlsOn(w io.Writer) error {
 	content := `
 	<div class="controls">
 		<button class="controlsaction" type="button" onclick="location.href='?do=schedule'" >Schedule</button>
-		<button class="controlsaction preferred" type="button" onclick="location.href='?do=plan&debug=true'" >Plan</button>
-		<button class="controlsaction" type="button" onclick="location.href='?do=apply&debug=true'" >Apply</button>
+		<button class="controlsaction preferred" type="button" onclick="location.href='?do=plan'" >Plan</button>
+		<button class="controlsaction" type="button" onclick="location.href='?do=apply'" >Apply</button>
 	</div>
 `
 	fmt.Fprintln(w, content)
