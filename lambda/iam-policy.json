@@ -9,7 +9,6 @@
                 "ecs:UpdateService",
                 "ecs:ListTagsForResource",
                 "ecs:ListTasks",
-                "ecs:StartTask",
                 "ecs:StopTask",
                 "ecs:DescribeServices",
                 "ecs:DescribeTaskSets",

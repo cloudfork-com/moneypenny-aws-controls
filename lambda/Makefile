@@ -17,7 +17,7 @@ create:
 	--architectures arm64 \
 	--role ${ROLE} \
 	--timeout 60 \
-	--environment  "Variables={TIME_ZONE=Europe/Amsterdam}" \
+	--environment  "Variables={TIME_ZONE=Europe/Amsterdam,BASIC_USER=admin,BASIC_PASSWORD=???????}"
 	--zip-file fileb://mac.zip
 
 upgrade:
@@ -27,4 +27,4 @@ upgrade:
 upconfig:
 	aws lambda update-function-configuration --function-name moneypenny-aws-controls \
 	--timeout 60 \
-	--environment  "Variables={TIME_ZONE=Europe/Amsterdam}"
+	--environment  "Variables={TIME_ZONE=Europe/Amsterdam,BASIC_USER=admin,BASIC_PASSWORD=???????}"

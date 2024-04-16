@@ -84,7 +84,6 @@ ROLE=arn:aws:iam::111111111:role/moneypenny-aws-controls-role make create
 ### add trigger for Lambda service (API Gateway)
 
 - create a new API Gateway HTTP API
-- set Security to ...
 
 Now you have an API endpoint that you can visit to see the current Schedule.
 
