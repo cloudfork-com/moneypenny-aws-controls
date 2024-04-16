@@ -102,6 +102,7 @@ Using the Amazon EventBridge Scheduler you define a new schedule that targets th
     }
 }
 ```
+- change the role name to `Amazon_EventBridge_Scheduler_LAMBDA_moneypenny_aws_controls` 
 
 ### Local config
 
