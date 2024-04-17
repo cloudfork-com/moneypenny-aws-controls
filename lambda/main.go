@@ -29,14 +29,18 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		StatusCode: 200}
 
 	// auth check
-	httpreq, _ := http.NewRequest(http.MethodGet, "/", nil)
-	httpreq.Header.Add("Authorization", req.Headers["authorization"]) // must be lowercase
-	user, pass, ok := httpreq.BasicAuth()
-	if !ok || user != os.Getenv("BASIC_USER") || pass != os.Getenv("BASIC_PASSWORD") {
-		slog.Warn("invalid credentials", "user-length", len(user), "pass-length", len(pass), "request-headers", req.Headers)
-		resp.Headers["WWW-Authenticate"] = `Basic realm="Restricted"`
-		resp.StatusCode = http.StatusUnauthorized
-		return resp, nil
+	if len(req.Headers) == 0 {
+		slog.Info("function is not invoked from public APIGateway so no user credentials check needed")
+	} else {
+		httpreq, _ := http.NewRequest(http.MethodGet, "/", nil)
+		httpreq.Header.Add("Authorization", req.Headers["authorization"]) // must be lowercase
+		user, pass, ok := httpreq.BasicAuth()
+		if !ok || user != os.Getenv("BASIC_USER") || pass != os.Getenv("BASIC_PASSWORD") {
+			slog.Warn("invalid credentials", "user-length", len(user), "pass-length", len(pass), "request-headers", req.Headers)
+			resp.Headers["WWW-Authenticate"] = `Basic realm="Restricted"`
+			resp.StatusCode = http.StatusUnauthorized
+			return resp, nil
+		}
 	}
 
 	// setup logging

@@ -56,6 +56,8 @@ Run `Schedule` or `Plan` to see the planned effect.
 ### AWS deployment
 
 `moneypenny-aws-controls` is deployed as a AWS Lambda service that is invoked by the AWS EventBridge Scheduler or by your Browser.
+Access from the Browser requires Basic Authentication
+The credentials need to be provide as environment variable values upon deployment.
 Goto the folder `lambda` to find scripts and resources for deployment.
 
 #### create IAM Policy
@@ -78,7 +80,7 @@ In the commands below, replace the ROLE arn with that of `moneypenny-aws-control
 ```
 make compile 
 make zip
-ROLE=arn:aws:iam::111111111:role/moneypenny-aws-controls-role make create
+BASIC_USER=myuser BASIC_PASSWORD=mypwd ROLE=arn:aws:iam::111111111:role/moneypenny-aws-controls-role make create
 ```
 
 ### add trigger for Lambda service (API Gateway)
@@ -102,7 +104,7 @@ Using the Amazon EventBridge Scheduler you define a new schedule that targets th
     }
 }
 ```
-- change the role name to `Amazon_EventBridge_Scheduler_LAMBDA_moneypenny_aws_controls` 
+- change the role name to `Amazon_EventBridge_Scheduler_LAMBDA_moneypenny_aws_controls` for better recognition.
 
 ### Local config
 

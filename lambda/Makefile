@@ -17,7 +17,7 @@ create:
 	--architectures arm64 \
 	--role ${ROLE} \
 	--timeout 60 \
-	--environment  "Variables={TIME_ZONE=Europe/Amsterdam,BASIC_USER=admin,BASIC_PASSWORD=???????}"
+	--environment  "Variables={TIME_ZONE=Europe/Amsterdam,BASIC_USER=${BASIC_USER},BASIC_PASSWORD=${BASIC_PASSWORD}}"
 	--zip-file fileb://mac.zip
 
 upgrade:
