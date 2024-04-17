@@ -129,6 +129,22 @@ Local and enabled defined plans override the onces defined (through the `moneype
 ]
 ```
 
+### Terraform
+
+Optionally, you can tell terraform not to touch the `moneypenny` tag value for ECS services by including a life-cycle section:
+```
+resource "aws_ecs_service" "default" {
+
+  # ... other stuff
+
+  lifecycle { 
+    ignore_changes = [
+      tags["moneypenny"],
+    ]
+  }
+}
+```
+
 
 ### How it works
 
