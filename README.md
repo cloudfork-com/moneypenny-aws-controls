@@ -10,13 +10,13 @@ The main usecase is to stop tasks of services that are used in non-production st
 
 - If you use tools such as `Terraform` to manage your infrastructure then these tools can conflict with this schedule; e.g. applying a terraform plan when services are stopped by `moneypenny-aws-controls` could start these services again and vice versa.
 - The schedule can optionally specifiy the number of tasks to run (`count`) when starting the service; this may not be same count at the time the service was stopped.
-- Depending on your AWS EventBridge Schedule cron expression, updates to the `moneypenny` tag value are not immediate effictive; you can manually `plan` and `apply` the schedule instead.
+- Depending on your AWS EventBridge Schedule cron expression, updates to a `moneypenny` tag value is not immediately effective; you can manually `plan` and `apply` the schedule instead.
 - AWS Fargate capacity providers is a different solution to control the number of tasks running and uses an Auto Scaling Group connected to CloudWatch metrics and only works on the cluster level. The `moneypenny-aws-controls` service is for exact controlling up and downtime of services.
 
 
 ## cron
 
-Each state change (running,stopped) requires a simplified cron expression.
+Each state change (->running, ->stopped) requires a simplified cron expression.
 ```
  "0 15 1-5"
  ```
@@ -56,8 +56,8 @@ Run `Schedule` or `Plan` to see the planned effect.
 ### AWS deployment
 
 `moneypenny-aws-controls` is deployed as a AWS Lambda service that is invoked by the AWS EventBridge Scheduler or by your Browser.
-Access from the Browser requires Basic Authentication
-The credentials need to be provide as environment variable values upon deployment.
+Access from the Browser requires Basic Authentication ; because of the Browser access requirement, AWS IAM cannot be used.
+The credentials need to be provided as environment variable values upon deployment.
 Goto the folder `lambda` to find scripts and resources for deployment.
 
 #### create IAM Policy
@@ -70,12 +70,13 @@ Create a role named `moneypenny-aws-controls-role`:
 
 - Trusted entity type = AWS Service
 - Use case, Service = Lambda
-- Policy = moneypenny-aws-controls-policy
+- Policy = `moneypenny-aws-controls-policy`
 
 #### deploy Lambda service (ARM64)
 
 The `Makefile` has a `TIME_ZONE` environment variable you might need to change.
-In the commands below, replace the ROLE arn with that of `moneypenny-aws-controls-role`.
+In the commands below, replace the ROLE arn with that of `moneypenny-aws-controls-role` you just created.
+Also, replace the USER and PASSWORD values.
 
 ```
 make compile 
@@ -104,7 +105,7 @@ Using the Amazon EventBridge Scheduler you define a new schedule that targets th
     }
 }
 ```
-- change the role name to `Amazon_EventBridge_Scheduler_LAMBDA_moneypenny_aws_controls` for better recognition.
+- change the role name to `Amazon_EventBridge_Scheduler_LAMBDA_moneypenny_aws_controls` for better recognition when listing roles in AWS console.
 
 ### Local config
 
