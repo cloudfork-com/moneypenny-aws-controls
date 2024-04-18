@@ -3,9 +3,6 @@ package main
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
-	"github.com/aws/aws-cdk-go/awscdk/v2/awss3assets"
-
-	// "github.com/aws/aws-cdk-go/awscdk/v2/awssqs"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
 )
@@ -23,9 +20,7 @@ func NewMoneypennyStack(scope constructs.Construct, id string, props *Moneypenny
 
 	// https://aws.amazon.com/blogs/compute/migrating-aws-lambda-functions-from-the-go1-x-runtime-to-the-custom-runtime-on-amazon-linux-2/
 	awslambda.NewFunction(stack, jsii.String("moneypenny-aws-controls"), &awslambda.FunctionProps{
-		Code: awslambda.Code_FromAsset(jsii.String("../../lambda"), &awss3assets.AssetOptions{ //folder where bootstrap executable is located
-			Bundling: &awscdk.BundlingOptions{},
-		}),
+		Code:         awslambda.Code_FromAsset(jsii.String("../../lambda"), nil), //folder where bootstrap executable is located
 		Runtime:      awslambda.Runtime_PROVIDED_AL2(),
 		Handler:      jsii.String("bootstrap"),
 		Architecture: awslambda.Architecture_ARM_64(),
