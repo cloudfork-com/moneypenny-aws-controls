@@ -1,7 +1,7 @@
 ## moneypenny AWS controls
 
 Service to schedule ECS Fargate services by controlling the `desired-count` value.
-The main usecase is to stop tasks of services that are used in non-production stages (dev,test,acc) during non-working hours (evening, weekends) thereby reducing AWS costs.
+The primary purpose is to halt the operations of services during off-business hours (evenings, weekends), specifically for non-production environments (dev, test, acc), resulting in a reduction of AWS expenses.
 
 ![schedule](doc/schedule.png)
 
@@ -109,8 +109,7 @@ Using the Amazon EventBridge Scheduler you define a new schedule that targets th
 
 ### Local config
 
-You can use the program locally by specifying a `aws-service-plans.json` file.
-Local and enabled defined plans override the onces defined (through the `moneypenny` tag) in AWS.
+Next to or instead of using resource tags, you can use the program by specifying a `aws-service-plans.json` file. Local and enabled defined plans override the onces defined (through the `moneypenny` tag) in AWS.
 
 ```
 [
@@ -128,6 +127,18 @@ Local and enabled defined plans override the onces defined (through the `moneype
         "moneypenny": "running=0 7 1-5. stopped=0 22 1-5. count=2."
     }
 ]
+```
+To run the plan:
+```
+awscontrols -plans aws-service-plans.json
+```
+To run apply the plan:
+```
+awscontrols -plans aws-service-plans.json apply
+```
+To generate the schedule:
+```
+awscontrols -plans aws-service-plans.json schedule
 ```
 
 ### Terraform
