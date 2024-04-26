@@ -27,22 +27,25 @@ func main() {
 	if err := loader.LoadServicePlans(); err != nil {
 		return
 	}
-	pe, err := mac.NewPlanExecutor(loader.Plans, *profile)
+	client, err := mac.NewECSClient(*profile)
 	if err != nil {
 		return
 	}
-	pe.SetLocalPlansOnly(*localOnly)
+	fetcher := mac.NewPlanFetcher(client)
+	if err := fetcher.FetchServices(loader.Plans); err != nil {
+		return
+	}
+	executor := mac.NewPlanExecutor(client, loader.Plans, fetcher.Services, *profile)
 
 	if slices.Contains(os.Args, "apply") {
-		pe.Apply()
+		executor.Apply()
 	} else if slices.Contains(os.Args, "report") {
-		pe.Report()
+		executor.Report()
 	} else if slices.Contains(os.Args, "schedule") {
-		pe.Schedule()
+		executor.Schedule()
 	} else {
-		pe.Plan()
+		executor.Plan()
 	}
-
 }
 
 func setupLog() {

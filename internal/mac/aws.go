@@ -5,10 +5,20 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/aws/aws-sdk-go/aws"
 )
+
+func NewECSClient(profile string) (*ecs.Client, error) {
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile(profile))
+	if err != nil {
+		slog.Error("config fail", "err", err)
+		return nil, err
+	}
+	return ecs.NewFromConfig(cfg), nil
+}
 
 func AllServices(client *ecs.Client) (list []types.Service, err error) {
 	ctx := context.Background()

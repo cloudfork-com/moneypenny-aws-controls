@@ -68,52 +68,57 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 	if err := mac.SetTimezone(os.Getenv("TIME_ZONE")); err != nil {
 		slog.Warn("failed to set timezone, using local", "err", err, "local", time.Local.String(), "TIME_ZONE", os.Getenv("TIME_ZONE"))
 	}
-	pe, err := mac.NewPlanExecutor([]*mac.ServicePlan{}, "") // default profile
+
+	// setup client
+	client, err := mac.NewECSClient("") // default profile
 	if err != nil {
-		logHandler.Close()
-		resp.StatusCode = 500
-		resp.Body = logBuffer.String()
 		return resp, err
 	}
-	rep := mac.NewReporter(pe)
+	fetcher := mac.NewPlanFetcher(client)
+	if err := fetcher.FetchServicesAndPlans(); err != nil {
+		return resp, err
+	}
+
+	executor := mac.NewPlanExecutor(client, fetcher.Plans, fetcher.Services, "") // default profile
+	rep := mac.NewReporter(executor)
 	action := req.QueryStringParameters["do"]
 	switch action {
 	case "apply":
-		pe.Apply()
+		executor.Apply()
 		// wait to allow state change
 		time.Sleep(1 * time.Second)
 		logHandler.Close()
 		resp.Body = wrapLog(logBuffer.String(), rep)
 		return resp, nil
 	case "start":
-		pe.Start(req.QueryStringParameters["service-arn"])
+		executor.Start(req.QueryStringParameters["service-arn"])
 		// wait to allow state change
 		time.Sleep(1 * time.Second)
 		logHandler.Close()
 		resp.Body = wrapLog(logBuffer.String(), rep)
 		return resp, nil
 	case "stop":
-		pe.Stop(req.QueryStringParameters["service-arn"])
+		executor.Stop(req.QueryStringParameters["service-arn"])
 		// wait to allow state change
 		time.Sleep(1 * time.Second)
 		logHandler.Close()
 		resp.Body = wrapLog(logBuffer.String(), rep)
 		return resp, nil
 	case "plan":
-		pe.Plan()
+		executor.Plan()
 		logHandler.Close()
 		resp.Body = wrapLog(logBuffer.String(), rep)
 		return resp, nil
 	case "change-count":
 		// wait to allow state change
 		time.Sleep(1 * time.Second)
-		pe.ChangeTaskCount(req.QueryStringParameters["service-arn"], req.QueryStringParameters["count"])
+		executor.ChangeTaskCount(req.QueryStringParameters["service-arn"], req.QueryStringParameters["count"])
 		logHandler.Close()
 		resp.Body = wrapLog(logBuffer.String(), rep)
 		return resp, nil
 	}
 	slog.Info("building schedule")
-	if err := pe.BuildWeekPlan(); err != nil {
+	if err := executor.BuildWeekPlan(); err != nil {
 		logHandler.Close()
 		resp.StatusCode = 500
 		resp.Body = logBuffer.String()

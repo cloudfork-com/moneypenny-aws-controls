@@ -1,7 +1,6 @@
 package mac
 
 import (
-	"context"
 	"errors"
 	"log/slog"
 	"os"
@@ -11,7 +10,6 @@ import (
 
 	_ "embed"
 
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 )
@@ -19,23 +17,20 @@ import (
 var serviceTagName = "moneypenny"
 
 type PlanExecutor struct {
-	dryRun          bool
-	weekPlan        *WeekPlan
-	localPlans      []*ServicePlan
-	plans           []*ServicePlan
-	client          *ecs.Client
-	profile         string
-	fetchedServices []types.Service
-	localOnly       bool
+	dryRun      bool
+	weekPlan    *WeekPlan
+	plans       []*ServicePlan
+	profile     string
+	client      *ecs.Client
+	awsServices []types.Service // TODO is this used?
 }
 
-func NewPlanExecutor(localPlans []*ServicePlan, profile string) (*PlanExecutor, error) {
-	p := &PlanExecutor{weekPlan: new(WeekPlan), dryRun: true, profile: profile, localPlans: localPlans}
-	p.applyLocalPlans()
-	if err := p.createECSClient(); err != nil {
-		return nil, err
+func NewPlanExecutor(client *ecs.Client, plans []*ServicePlan, services []types.Service, profile string) *PlanExecutor {
+	wp := new(WeekPlan)
+	for _, each := range plans {
+		wp.AddServicePlan(*each)
 	}
-	return p, nil
+	return &PlanExecutor{weekPlan: wp, dryRun: true, profile: profile, plans: plans, awsServices: services, client: client}
 }
 
 func setLogContext(action, profile string) {
@@ -44,11 +39,6 @@ func setLogContext(action, profile string) {
 		clog = clog.With("profile", profile)
 	}
 	slog.SetDefault(clog)
-}
-
-// SetLocalPlansOnly with true will skip scanning services.
-func (p *PlanExecutor) SetLocalPlansOnly(localOnly bool) {
-	p.localOnly = localOnly
 }
 
 func (p *PlanExecutor) Plan() error {
@@ -67,9 +57,6 @@ func (p *PlanExecutor) Start(serviceARN string) error {
 	if serviceARN == "" {
 		return errors.New("no service ARN was given")
 	}
-	if err := p.createECSClient(); err != nil {
-		return err
-	}
 	return StartService(p.client, Service{ARN: serviceARN}, 1)
 }
 
@@ -78,9 +65,6 @@ func (p *PlanExecutor) Stop(serviceARN string) error {
 	p.dryRun = false
 	if serviceARN == "" {
 		return errors.New("no service ARN was given")
-	}
-	if err := p.createECSClient(); err != nil {
-		return err
 	}
 	return StopService(p.client, Service{ARN: serviceARN})
 }
@@ -96,9 +80,6 @@ func (p *PlanExecutor) ChangeTaskCount(serviceARN string, countInput string) err
 	}
 	count, err := strconv.Atoi(countInput)
 	if err != nil {
-		return err
-	}
-	if err := p.createECSClient(); err != nil {
 		return err
 	}
 	return ChangeTaskCountOfService(p.client, Service{ARN: serviceARN}, count)
@@ -123,14 +104,9 @@ func (p *PlanExecutor) Schedule() error {
 }
 
 func (p *PlanExecutor) BuildWeekPlan() error {
-	// collect plans from tagges services
-	allServices, err := p.fetchAllServices()
-	if err != nil {
-		return err
-	}
 	// check existence
 	p.weekPlan.TimePlansDo(func(tp *TimePlan) {
-		exitsInCluster := slices.ContainsFunc(allServices, func(existing types.Service) bool {
+		exitsInCluster := slices.ContainsFunc(p.awsServices, func(existing types.Service) bool {
 			return *existing.ServiceArn == tp.ARN
 		})
 		tp.doesNotExist = !exitsInCluster
@@ -138,82 +114,7 @@ func (p *PlanExecutor) BuildWeekPlan() error {
 	return nil
 }
 
-func (p *PlanExecutor) applyLocalPlans() {
-	for _, each := range p.localPlans {
-		slog.Debug("adding local service plan", "service", each.ARN, "disabled", each.Disabled)
-		p.weekPlan.AddServicePlan(*each)
-	}
-}
-
-func (p *PlanExecutor) createECSClient() error {
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile(p.profile))
-	if err != nil {
-		slog.Error("config fail", "err", err)
-		return err
-	}
-	p.client = ecs.NewFromConfig(cfg)
-	return nil
-}
-
-func (p *PlanExecutor) fetchAllServices() ([]types.Service, error) {
-	if p.fetchedServices != nil {
-		return p.fetchedServices, nil
-	}
-	// if p.localOnly {
-	// 	// only fetch services from local plans
-	// 	allServices := []types.Service{}
-	// 	for _, each := range p.localPlans {
-	// 		if each.Disabled {
-	// 			continue
-	// 		}
-	// 		allServices = append(allServices, types.Service{
-	// 			ClusterArn: aws.String(each.ClusterARN()),
-	// 			ServiceArn: aws.String(each.ARN),
-	// 		})
-	// 	}
-	// 	p.fetchedServices = allServices
-	// 	return allServices, nil
-	// }
-	if len(p.localPlans) > 0 {
-		// skip fetching services from cluster
-		return []types.Service{}, nil
-	}
-	allServices, err := AllServices(p.client)
-	if err != nil {
-		slog.Error("AllServices fail", "err", err)
-		return nil, err
-	}
-	for _, each := range allServices {
-		input := TagValue(each, serviceTagName)
-		sp := new(ServicePlan)
-		sp.TagValue = input // can be empty
-		if IsTagValueReference(input) {
-			slog.Debug("find tag value by service", "service", *each.ServiceArn, "moneypenny", input)
-			input = ResolveTagValue(allServices, input)
-			sp.ResolvedTagValue = input // can be empty
-		}
-		if input == "" {
-			// skip this service plan
-			continue
-		}
-		sp.ARN = *each.ServiceArn
-		if err := sp.Validate(); err != nil {
-			slog.Warn("invalid moneypenny tag value", "value", input, "err", err)
-		}
-		slog.Debug("adding service plan", "service", *each.ServiceArn, "crons", input)
-		p.plans = append(p.plans, sp)
-		p.weekPlan.AddServicePlan(*sp)
-	}
-	// cache it
-	p.fetchedServices = allServices
-	return allServices, nil
-}
-
 func (p *PlanExecutor) exec() error {
-	allServices, err := p.fetchAllServices()
-	if err != nil {
-		return err
-	}
 	now := time.Now().In(userLocation)
 	slog.Info("executing", "time", now, "location", os.Getenv("TIME_ZONE"))
 	for _, each := range p.plans {
@@ -227,7 +128,7 @@ func (p *PlanExecutor) exec() error {
 			clog := slog.With("name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue, "task-count", howMany)
 
 			if lastStatus == Unknown {
-				exitsInCluster := slices.ContainsFunc(allServices, func(existing types.Service) bool {
+				exitsInCluster := slices.ContainsFunc(p.awsServices, func(existing types.Service) bool {
 					return *existing.ServiceArn == each.ARN
 				})
 				if exitsInCluster {
