@@ -30,8 +30,8 @@ func (p *PlanFetcher) FetchServices(plans []*ServicePlan) error {
 			Services: []string{each.ARN},
 			Include:  []types.ServiceField{types.ServiceFieldTags},
 		})
-		if err != nil {
-			slog.Warn("describe service fail, plan will be disabled", "err", err)
+		if err != nil || len(infos.Services) == 0 {
+			slog.Warn("describe service fail or does not exist, plan will be disabled", "err", err)
 			each.Disabled = true
 		}
 		p.Services = append(p.Services, infos.Services...)

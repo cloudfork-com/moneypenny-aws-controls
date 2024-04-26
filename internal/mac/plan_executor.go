@@ -119,7 +119,7 @@ func (p *PlanExecutor) exec() error {
 	slog.Info("executing", "time", now, "location", os.Getenv("TIME_ZONE"))
 	for _, each := range p.plans {
 		if each.Disabled {
-			slog.Warn("disabled plan", "service", each.ARN)
+			slog.Warn("disabled plan, skipping", "service", each.ARN)
 			continue
 		}
 		event, ok := p.weekPlan.LastScheduledEventAt(each.Service, now)
