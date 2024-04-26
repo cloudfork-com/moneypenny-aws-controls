@@ -24,7 +24,7 @@ func (p *PlanFetcher) CheckServicePlans(plans []*ServicePlan) error {
 	// given the servicePlans, collect the AWS services, one-by-one because multi-cluster
 	for _, each := range plans {
 		slog.Debug("describing service", "cluster", each.ClusterARN(), "service", each.ARN)
-		_, err := p.client.DescribeServices(context.TODO(), &ecs.DescribeServicesInput{
+		infos, err := p.client.DescribeServices(context.TODO(), &ecs.DescribeServicesInput{
 			Cluster:  aws.String(each.ClusterARN()),
 			Services: []string{each.ARN},
 			Include:  []types.ServiceField{types.ServiceFieldTags},
