@@ -51,7 +51,6 @@ func (r ScheduleWriter) WriteOn(profile string, wp *WeekPlan, w io.Writer) error
 			td.ClusterName = tp.ClusterName()
 			td.ServiceName = tp.Name()
 			td.Plan = tp
-			td.Cron = "?"
 			td.RowClass = "stopped"
 			td.TasksCount = 0
 			td.Cron = tp.cron

@@ -26,6 +26,7 @@ type PlanExecutor struct {
 	client          *ecs.Client
 	profile         string
 	fetchedServices []types.Service
+	localOnly       bool
 }
 
 func NewPlanExecutor(localPlans []*ServicePlan, profile string) (*PlanExecutor, error) {
@@ -43,6 +44,11 @@ func setLogContext(action, profile string) {
 		clog = clog.With("profile", profile)
 	}
 	slog.SetDefault(clog)
+}
+
+// SetLocalPlansOnly with true will skip scanning services.
+func (p *PlanExecutor) SetLocalPlansOnly(localOnly bool) {
+	p.localOnly = localOnly
 }
 
 func (p *PlanExecutor) Plan() error {
@@ -153,6 +159,25 @@ func (p *PlanExecutor) fetchAllServices() ([]types.Service, error) {
 	if p.fetchedServices != nil {
 		return p.fetchedServices, nil
 	}
+	// if p.localOnly {
+	// 	// only fetch services from local plans
+	// 	allServices := []types.Service{}
+	// 	for _, each := range p.localPlans {
+	// 		if each.Disabled {
+	// 			continue
+	// 		}
+	// 		allServices = append(allServices, types.Service{
+	// 			ClusterArn: aws.String(each.ClusterARN()),
+	// 			ServiceArn: aws.String(each.ARN),
+	// 		})
+	// 	}
+	// 	p.fetchedServices = allServices
+	// 	return allServices, nil
+	// }
+	if len(p.localPlans) > 0 {
+		// skip fetching services from cluster
+		return []types.Service{}, nil
+	}
 	allServices, err := AllServices(p.client)
 	if err != nil {
 		slog.Error("AllServices fail", "err", err)
@@ -160,20 +185,22 @@ func (p *PlanExecutor) fetchAllServices() ([]types.Service, error) {
 	}
 	for _, each := range allServices {
 		input := TagValue(each, serviceTagName)
-		if input == "" {
-			continue
-		}
 		sp := new(ServicePlan)
-		sp.ARN = *each.ServiceArn
-		slog.Debug("adding service plan", "service", *each.ServiceArn, "crons", input)
+		sp.TagValue = input // can be empty
+		if IsTagValueReference(input) {
+			slog.Debug("find tag value by service", "service", *each.ServiceArn, "moneypenny", input)
+			input = ResolveTagValue(allServices, input)
+			sp.ResolvedTagValue = input // can be empty
+		}
 		if input == "" {
-			slog.Warn("invalid moneypenny tag value", "value", input, "err", err)
+			// skip this service plan
 			continue
 		}
-		sp.TagValue = input
+		sp.ARN = *each.ServiceArn
 		if err := sp.Validate(); err != nil {
 			slog.Warn("invalid moneypenny tag value", "value", input, "err", err)
 		}
+		slog.Debug("adding service plan", "service", *each.ServiceArn, "crons", input)
 		p.plans = append(p.plans, sp)
 		p.weekPlan.AddServicePlan(*sp)
 	}

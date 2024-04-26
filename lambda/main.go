@@ -143,6 +143,11 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		resp.Body = logBuffer.String()
 		return resp, err
 	}
+	if isDebug {
+		logHandler.Close()
+		fmt.Fprintln(html, "<h2>Log</h2>")
+		html.WriteString(logBuffer.String())
+	}
 	timezoneOn(html)
 	versionOn(html)
 	rep.WriteCloseHTMLOn(html)

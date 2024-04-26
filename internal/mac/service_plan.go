@@ -7,10 +7,19 @@ import (
 
 type ServicePlan struct {
 	Service
-	TagValue     string         `json:"moneypenny"`
-	StateChanges []*StateChange `json:"state-changes"` // sorted by time on day
-	Disabled     bool           `json:"disabled"`
-	TagError     string         `json:"-"`
+	TagValue         string         `json:"moneypenny"`
+	ResolvedTagValue string         // if TagValue is a reference to another service then this value is the actual tag value with state changes
+	StateChanges     []*StateChange `json:"state-changes"` // sorted by time on day
+	Disabled         bool           `json:"disabled"`
+	TagError         string         `json:"-"`
+}
+
+// the actual tag value with state changes
+func (t *ServicePlan) tagValue() string {
+	if t.ResolvedTagValue != "" {
+		return t.ResolvedTagValue
+	}
+	return t.TagValue
 }
 
 func (t *ServicePlan) PercentageRunning() float32 {
@@ -72,28 +81,30 @@ end:
 }
 
 func (t *ServicePlan) Validate() error {
-	if t.TagValue != "" {
-		chgs, err := ParseStateChanges(t.TagValue)
-		if err != nil {
-			t.TagError = "BAD SYNTAX: " + t.TagValue
-			t.Disabled = true
-			return err
-		}
-		slices.SortFunc(chgs, func(a, b *StateChange) int {
-			return intCompare(a.CronSpec.Hour+a.CronSpec.Minute*60, b.CronSpec.Hour+b.CronSpec.Minute*60)
-		})
-		t.StateChanges = chgs
+	changes := t.tagValue()
+	if changes == "" {
 		return nil
 	}
-	// this exists when reading from file
-	for _, each := range t.StateChanges {
-		spec, err := ParseCronSpec(each.Cron)
-		if err != nil {
-			return err
-		}
-		each.CronSpec = spec
+	chgs, err := ParseStateChanges(changes)
+	if err != nil {
+		t.TagError = "BAD SYNTAX: " + changes
+		t.Disabled = true
+		return err
 	}
+	slices.SortFunc(chgs, func(a, b *StateChange) int {
+		return intCompare(a.CronSpec.Hour+a.CronSpec.Minute*60, b.CronSpec.Hour+b.CronSpec.Minute*60)
+	})
+	t.StateChanges = chgs
 	return nil
+	// this exists when reading from file
+	// for _, each := range t.StateChanges {
+	// 	spec, err := ParseCronSpec(each.Cron)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	each.CronSpec = spec
+	// }
+	// return nil
 }
 
 func (t *ServicePlan) DesiredCountAt(when time.Time) int {

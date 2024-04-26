@@ -13,9 +13,11 @@ import (
 
 var plansInput = flag.String("plans", "", "description of service plans")
 
-var debugging = flag.Bool("debug", false, "if true then more logging")
+var isDebug = flag.Bool("debug", false, "if true then more logging")
 
 var profile = flag.String("profile", "default", "run for a specific AWS profile")
+
+var localOnly = flag.Bool("local", false, "if true then only use the local service plans file")
 
 func main() {
 	flag.Parse()
@@ -29,6 +31,8 @@ func main() {
 	if err != nil {
 		return
 	}
+	pe.SetLocalPlansOnly(*localOnly)
+
 	if slices.Contains(os.Args, "apply") {
 		pe.Apply()
 	} else if slices.Contains(os.Args, "report") {
@@ -44,7 +48,7 @@ func main() {
 func setupLog() {
 	// set global logger with custom options
 	lvl := slog.LevelInfo
-	if *debugging {
+	if *isDebug {
 		lvl = slog.LevelDebug
 	}
 	slog.SetDefault(slog.New(

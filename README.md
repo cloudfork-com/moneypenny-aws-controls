@@ -18,7 +18,7 @@ The primary purpose is to halt the operations of services during off-business ho
 
 Each state change (->running, ->stopped) requires a simplified cron expression.
 ```
- "0 15 1-5"
+ 0 15 1-5
  ```
 
  - minute, 0..59
@@ -51,7 +51,25 @@ To disable one or all state changes, use the comment indicator `//`:
 running=0 8 1-5. // stopped=0 18 1-5. count=4
 ```
 
-Run `Schedule` or `Plan` to see the planned effect.
+Run `schedule` or `plan` to see the planned effect.
+
+### Sharing an AWS tag
+
+The value of the `moneypenny` tag can also refer to the tag value of another service using the `@` prefix:
+```
+@other-service
+```
+This exression means "use the value of the `moneypenny` tag as specified by `other-service` (for now, only within the same cluster).
+
+### Local run
+
+You can run the program `awscontrols` on your local machine to `plan`, `report` and `apply` the schedule without AWS deployment.
+The program will scan all services of all clusters for the active AWS profile (or as specified by `-profile`).
+
+Alternatively, you can run the program using a local defined services-plan file:
+```
+awscontrols -local -debug -plans aws-service-plans.json plan
+```
 
 ### AWS deployment
 
@@ -84,7 +102,7 @@ make zip
 BASIC_USER=myuser BASIC_PASSWORD=mypwd ROLE=arn:aws:iam::111111111:role/moneypenny-aws-controls-role make create
 ```
 
-### add trigger for Lambda service (API Gateway)
+#### add trigger for Lambda service (API Gateway)
 
 - create a new API Gateway HTTP API
 
@@ -109,7 +127,8 @@ Using the Amazon EventBridge Scheduler you define a new schedule that targets th
 
 ### Local config
 
-Next to or instead of using resource tags, you can use the program by specifying a `aws-service-plans.json` file. Local and enabled defined plans override the onces defined (through the `moneypenny` tag) in AWS.
+Next to or instead of using resource tags, you can use the program by specifying a `aws-service-plans.json` file. 
+Local and enabled defined plans override the onces defined (through the `moneypenny` tag) in AWS.
 
 ```
 [
@@ -157,6 +176,10 @@ resource "aws_ecs_service" "default" {
 }
 ```
 
+### Troubleshooting
+
+For AWS Lambda deployment, you can add the URL query parameter `debug=true` to view more details in the logging.
+For running the `awscontrols` program, you can add the `-debug` flag to view more details in the logging.
 
 ### How it works
 

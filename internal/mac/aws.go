@@ -3,6 +3,7 @@ package mac
 import (
 	"context"
 	"log/slog"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
@@ -57,6 +58,26 @@ func AllServices(client *ecs.Client) (list []types.Service, err error) {
 		}
 	}
 	return
+}
+
+func IsTagValueReference(val string) bool {
+	return strings.HasPrefix(val, "@")
+}
+
+// pre: IsTagValueReference(val)
+func ResolveTagValue(all []types.Service, val string) string {
+	// get the value from the service it is referencing
+	// return empty value if not found
+	referenceName := val[1:]
+	for _, each := range all {
+		s := each.ServiceName
+		if s != nil && *s == referenceName {
+			// do not recurse
+			return TagValue(each, serviceTagName)
+		}
+	}
+	slog.Warn("unable to resolve tag reference", "moneypenny-tag-value", referenceName)
+	return ""
 }
 
 func TagValue(service types.Service, tagKey string) string {
