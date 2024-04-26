@@ -20,6 +20,7 @@ func NewPlanLoader(configFile string) *PlanLoader {
 func (p *PlanLoader) LoadServicePlans() error {
 	if len(p.configFile) == 0 {
 		slog.Info("no local service plans")
+		return nil
 	} else {
 		data, err := os.ReadFile(p.configFile)
 		if err != nil {

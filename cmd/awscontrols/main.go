@@ -23,6 +23,7 @@ func main() {
 	flag.Parse()
 	setupLog()
 
+	slog.Info("awscontrols - scheduling ECS services")
 	loader := mac.NewPlanLoader(*plansInput)
 	if err := loader.LoadServicePlans(); err != nil {
 		return
@@ -32,10 +33,10 @@ func main() {
 		return
 	}
 	fetcher := mac.NewPlanFetcher(client)
-	if err := fetcher.FetchServices(loader.Plans); err != nil {
+	if err := fetcher.CheckServicePlans(loader.Plans); err != nil {
 		return
 	}
-	executor := mac.NewPlanExecutor(client, loader.Plans, fetcher.Services, *profile)
+	executor := mac.NewPlanExecutor(client, loader.Plans, *profile)
 
 	if slices.Contains(os.Args, "apply") {
 		executor.Apply()
