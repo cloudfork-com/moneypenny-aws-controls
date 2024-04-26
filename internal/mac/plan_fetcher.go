@@ -5,7 +5,6 @@ import (
 	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/aws/aws-sdk-go/aws"
 )
 
@@ -21,13 +20,12 @@ func NewPlanFetcher(client *ecs.Client) *PlanFetcher {
 }
 
 func (p *PlanFetcher) CheckServicePlans(plans []*ServicePlan) error {
-	// given the servicePlans, collect the AWS services, one-by-one because multi-cluster
+	// given the service plans, check the AWS service, one-by-one because multi-cluster (optimization = group per cluster)
 	for _, each := range plans {
 		slog.Debug("describing service", "cluster", each.ClusterARN(), "service", each.ARN)
 		infos, err := p.client.DescribeServices(context.TODO(), &ecs.DescribeServicesInput{
 			Cluster:  aws.String(each.ClusterARN()),
 			Services: []string{each.ARN},
-			Include:  []types.ServiceField{types.ServiceFieldTags},
 		})
 		if err != nil || len(infos.Services) == 0 {
 			slog.Warn("describe service fail or does not exist, plan will be disabled", "err", err)
