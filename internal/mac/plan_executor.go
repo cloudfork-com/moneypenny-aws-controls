@@ -4,33 +4,30 @@ import (
 	"errors"
 	"log/slog"
 	"os"
-	"slices"
 	"strconv"
 	"time"
 
 	_ "embed"
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 )
 
 var serviceTagName = "moneypenny"
 
 type PlanExecutor struct {
-	dryRun      bool
-	weekPlan    *WeekPlan
-	plans       []*ServicePlan
-	profile     string
-	client      *ecs.Client
-	awsServices []types.Service // TODO is this used?
+	dryRun   bool
+	weekPlan *WeekPlan
+	plans    []*ServicePlan
+	profile  string
+	client   *ecs.Client
 }
 
-func NewPlanExecutor(client *ecs.Client, plans []*ServicePlan, services []types.Service, profile string) *PlanExecutor {
+func NewPlanExecutor(client *ecs.Client, plans []*ServicePlan, profile string) *PlanExecutor {
 	wp := new(WeekPlan)
 	for _, each := range plans {
 		wp.AddServicePlan(*each)
 	}
-	return &PlanExecutor{weekPlan: wp, dryRun: true, profile: profile, plans: plans, awsServices: services, client: client}
+	return &PlanExecutor{weekPlan: wp, dryRun: true, profile: profile, plans: plans, client: client}
 }
 
 func setLogContext(action, profile string) {
@@ -103,17 +100,6 @@ func (p *PlanExecutor) Schedule() error {
 	return NewReporter(p).Schedule()
 }
 
-func (p *PlanExecutor) BuildWeekPlan() error {
-	// check existence
-	p.weekPlan.TimePlansDo(func(tp *TimePlan) {
-		exitsInCluster := slices.ContainsFunc(p.awsServices, func(existing types.Service) bool {
-			return *existing.ServiceArn == tp.ARN
-		})
-		tp.doesNotExist = !exitsInCluster
-	})
-	return nil
-}
-
 func (p *PlanExecutor) exec() error {
 	now := time.Now().In(userLocation)
 	slog.Info("executing", "time", now, "location", os.Getenv("TIME_ZONE"))
@@ -128,16 +114,8 @@ func (p *PlanExecutor) exec() error {
 			clog := slog.With("name", each.Service.Name(), "state", lastStatus, "crons", each.TagValue, "task-count", howMany)
 
 			if lastStatus == Unknown {
-				exitsInCluster := slices.ContainsFunc(p.awsServices, func(existing types.Service) bool {
-					return *existing.ServiceArn == each.ARN
-				})
-				if exitsInCluster {
-					clog.Info("service has unknown last status, assume it is stopped")
-					lastStatus = Stopped
-				} else {
-					clog.Warn("service does not exist, update your configuration")
-					continue
-				}
+				clog.Info("service has unknown last status, assume it is stopped")
+				lastStatus = Stopped
 			}
 			isRunning := lastStatus == Running
 			if event.DesiredState != Running && isRunning {

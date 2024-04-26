@@ -10,9 +10,8 @@ import (
 )
 
 type PlanFetcher struct {
-	client   *ecs.Client
-	Services []types.Service
-	Plans    []*ServicePlan
+	client *ecs.Client
+	Plans  []*ServicePlan
 }
 
 func NewPlanFetcher(client *ecs.Client) *PlanFetcher {
@@ -21,11 +20,11 @@ func NewPlanFetcher(client *ecs.Client) *PlanFetcher {
 	}
 }
 
-func (p *PlanFetcher) FetchServices(plans []*ServicePlan) error {
+func (p *PlanFetcher) CheckServicePlans(plans []*ServicePlan) error {
 	// given the servicePlans, collect the AWS services, one-by-one because multi-cluster
 	for _, each := range plans {
 		slog.Debug("describing service", "cluster", each.ClusterARN(), "service", each.ARN)
-		infos, err := p.client.DescribeServices(context.TODO(), &ecs.DescribeServicesInput{
+		_, err := p.client.DescribeServices(context.TODO(), &ecs.DescribeServicesInput{
 			Cluster:  aws.String(each.ClusterARN()),
 			Services: []string{each.ARN},
 			Include:  []types.ServiceField{types.ServiceFieldTags},
@@ -34,13 +33,12 @@ func (p *PlanFetcher) FetchServices(plans []*ServicePlan) error {
 			slog.Warn("describe service fail or does not exist, plan will be disabled", "err", err)
 			each.Disabled = true
 		}
-		p.Services = append(p.Services, infos.Services...)
 	}
 	p.Plans = plans
 	return nil
 }
 
-func (p *PlanFetcher) FetchServicesAndPlans() error {
+func (p *PlanFetcher) FetchServicePlans() error {
 	allServices, err := AllServices(p.client)
 	if err != nil {
 		slog.Error("fetchServicesAndPlans fail", "err", err)
@@ -65,7 +63,6 @@ func (p *PlanFetcher) FetchServicesAndPlans() error {
 		}
 		slog.Debug("adding service plan", "service", *each.ServiceArn, "crons", input)
 		p.Plans = append(p.Plans, sp)
-		p.Services = append(p.Services, each)
 	}
 	return nil
 }

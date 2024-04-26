@@ -20,9 +20,6 @@ func NewReporter(exec *PlanExecutor) *Reporter {
 }
 
 func (r *Reporter) Report() error {
-	if err := r.executor.BuildWeekPlan(); err != nil {
-		return err
-	}
 	rout, _ := os.Create(fmt.Sprintf("%s-report.html", r.executor.profile))
 	defer rout.Close()
 
@@ -44,9 +41,6 @@ func (r *Reporter) Report() error {
 }
 
 func (r *Reporter) Schedule() error {
-	if err := r.executor.BuildWeekPlan(); err != nil {
-		return err
-	}
 	rout, _ := os.Create(fmt.Sprintf("%s-schedule.html", r.executor.profile))
 	defer rout.Close()
 	r.WriteOpenHTMLOn(rout)
@@ -58,9 +52,6 @@ func (r *Reporter) Schedule() error {
 }
 
 func (r *Reporter) Status() error {
-	if err := r.executor.BuildWeekPlan(); err != nil {
-		return err
-	}
 	rout, _ := os.Create(fmt.Sprintf("%s-status.html", r.executor.profile))
 	defer rout.Close()
 	r.WriteOpenHTMLOn(rout)

@@ -75,11 +75,11 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		return resp, err
 	}
 	fetcher := mac.NewPlanFetcher(client)
-	if err := fetcher.FetchServicesAndPlans(); err != nil {
+	if err := fetcher.FetchServicePlans(); err != nil {
 		return resp, err
 	}
 
-	executor := mac.NewPlanExecutor(client, fetcher.Plans, fetcher.Services, "") // default profile
+	executor := mac.NewPlanExecutor(client, fetcher.Plans, "") // default profile
 	rep := mac.NewReporter(executor)
 	action := req.QueryStringParameters["do"]
 	switch action {
@@ -116,13 +116,6 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		logHandler.Close()
 		resp.Body = wrapLog(logBuffer.String(), rep)
 		return resp, nil
-	}
-	slog.Info("building schedule")
-	if err := executor.BuildWeekPlan(); err != nil {
-		logHandler.Close()
-		resp.StatusCode = 500
-		resp.Body = logBuffer.String()
-		return resp, err
 	}
 	html := new(bytes.Buffer)
 	rep.WriteOpenHTMLOn(html)
