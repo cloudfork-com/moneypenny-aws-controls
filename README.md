@@ -1,17 +1,17 @@
 ## moneypenny AWS controls
 
-Service to schedule ECS Fargate services by controlling the `desired-count` value.
-The primary purpose is to halt the operations of services during off-business hours (evenings, weekends), specifically for non-production environments (dev, test, acc), resulting in a reduction of AWS expenses.
+Moneypenny AWS Controls offers a scheduling service specifically designed for the management of ECS Fargate services. It skillfully manipulates the `desired-count` value to enable the halting of operations for these services during times of inactivity, particularly during non-business hours (evenings, and weekends) and chiefly in non-production environments (dev, test, acc). The main goal of the Moneypenny AWS Controls project is to optimize resource usage, thereby contributing to the reduction of AWS expenses.
 
 ![schedule](doc/schedule.png)
 
 
 ## Considerations
 
-- If you use tools such as `Terraform` to manage your infrastructure then these tools can conflict with this schedule; e.g. applying a terraform plan when services are stopped by `moneypenny-aws-controls` could start these services again and vice versa.
-- The schedule can optionally specifiy the number of tasks to run (`count`) when starting the service; this may not be same count at the time the service was stopped.
-- Depending on your AWS EventBridge Schedule cron expression, updates to a `moneypenny` tag value is not immediately effective; you can manually `plan` and `apply` the schedule instead.
-- AWS Fargate capacity providers is a different solution to control the number of tasks running and uses an Auto Scaling Group connected to CloudWatch metrics and only works on the cluster level. The `moneypenny-aws-controls` service is for exact controlling up and downtime of services.
+There are some vital pointers to consider while using these controls:
+* The service could potentially face conflicts with infrastructural management tools such as Terraform, especially during scheduled stops. E.g. applying a terraform plan could restart a service which was scheduled by `moneypenny-aws-controls` to be stopped.
+* The service provides optional specifics for task number (`count`) at service start, which could differ from the count at service stop.
+* Any updates to the `moneypenny` tag value might not instantly apply based on your AWS EventBridge Schedule cron expression. However, a manual `plan` and `apply` of the schedule could be done as an alternative.
+* It is worth noting that AWS Fargate capacity providers differ as they control the number of tasks running through Auto Scaling Group connected to CloudWatch metrics and only operate at the cluster level. The `moneypenny-aws-controls` service, on the other hand, is purpose-built for controlling the uptime and downtime with precision.
 
 
 ## cron
