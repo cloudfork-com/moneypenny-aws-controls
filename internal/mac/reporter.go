@@ -20,10 +20,8 @@ func NewReporter(exec *PlanExecutor) *Reporter {
 }
 
 func (r *Reporter) Report() error {
-	rout, _ := os.Create(fmt.Sprintf("%s-report.html", r.executor.profile))
+	rout, _ := os.Create("awscontrols-report.html")
 	defer rout.Close()
-
-	slog.Info("write report")
 
 	r.WriteOpenHTMLOn(rout)
 
@@ -41,7 +39,7 @@ func (r *Reporter) Report() error {
 }
 
 func (r *Reporter) Schedule() error {
-	rout, _ := os.Create(fmt.Sprintf("%s-schedule.html", r.executor.profile))
+	rout, _ := os.Create("awscontrols-schedule.html")
 	defer rout.Close()
 	r.WriteOpenHTMLOn(rout)
 	fmt.Fprintln(rout, "<h2>Schedule</h2>")
@@ -52,7 +50,7 @@ func (r *Reporter) Schedule() error {
 }
 
 func (r *Reporter) Status() error {
-	rout, _ := os.Create(fmt.Sprintf("%s-status.html", r.executor.profile))
+	rout, _ := os.Create("awscontrols-status.html")
 	defer rout.Close()
 	r.WriteOpenHTMLOn(rout)
 	fmt.Fprintln(rout, "<h2>Status</h2>")
@@ -84,7 +82,7 @@ func (r *Reporter) WriteCloseHTMLOn(w io.Writer) error {
 
 func (r *Reporter) WriteScheduleOn(w io.Writer) error {
 	rep := ScheduleWriter{}
-	if err := rep.WriteOn(r.executor.profile, r.executor.weekPlan, w); err != nil {
+	if err := rep.WriteOn(r.executor.weekPlan, w); err != nil {
 		slog.Error("schedule report failed", "err", err)
 		return err
 	}

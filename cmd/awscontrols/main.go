@@ -15,8 +15,6 @@ var plansInput = flag.String("plans", "", "description of service plans")
 
 var isDebug = flag.Bool("debug", false, "if true then more logging")
 
-var profile = flag.String("profile", "default", "run for a specific AWS profile")
-
 var localOnly = flag.Bool("local", false, "if true then only use the local service plans file")
 
 func main() {
@@ -28,7 +26,7 @@ func main() {
 	if err := loader.LoadServicePlans(); err != nil {
 		return
 	}
-	client, err := mac.NewECSClient(*profile)
+	client, err := mac.NewECSClient()
 	if err != nil {
 		return
 	}
@@ -36,7 +34,7 @@ func main() {
 	if err := fetcher.CheckServicePlans(loader.Plans); err != nil {
 		return
 	}
-	executor := mac.NewPlanExecutor(client, loader.Plans, *profile)
+	executor := mac.NewPlanExecutor(client, loader.Plans)
 
 	if slices.Contains(os.Args, "apply") {
 		executor.Apply()

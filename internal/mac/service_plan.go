@@ -26,6 +26,9 @@ func (t *ServicePlan) PercentageRunning() float32 {
 	if len(t.StateChanges) == 0 {
 		return 1.0 // assume running all the time
 	}
+	if t.Disabled {
+		return 1.0 // assume running all the time
+	}
 	weekMinutes := 24 * 7 * 60
 	dayMinutes := 24 * 60
 	runMinutes := 0

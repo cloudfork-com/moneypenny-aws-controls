@@ -5,8 +5,8 @@ import (
 )
 
 func TestReportSchedule(t *testing.T) {
-	c, _ := NewECSClient("default")
-	e := NewPlanExecutor(c, []*ServicePlan{}, "default")
+	c, _ := NewECSClient()
+	e := NewPlanExecutor(c, []*ServicePlan{})
 	r := NewReporter(e)
 	r.Report()
 }

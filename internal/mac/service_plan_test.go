@@ -23,6 +23,25 @@ func TestServicePlanAlways(t *testing.T) {
 		t.Errorf("Expected 1, got %f", p)
 	}
 }
+func TestServicePlanEmpty(t *testing.T) {
+	sp := new(ServicePlan)
+	p := sp.PercentageRunning()
+	if p != 1 {
+		t.Errorf("Expected 1, got %f", p)
+	}
+}
+func TestServicePlanDisabled(t *testing.T) {
+	sp := new(ServicePlan)
+	sp.Disabled = true
+	sp.TagValue = "running=0 0 0-6"
+	if err := sp.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	p := sp.PercentageRunning()
+	if p != 1 {
+		t.Errorf("Expected 1, got %f", p)
+	}
+}
 func TestServicePlanNever(t *testing.T) {
 	sp := new(ServicePlan)
 	sp.TagValue = "stopped=0 0 0-6"

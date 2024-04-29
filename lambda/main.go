@@ -70,7 +70,7 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 	}
 
 	// setup client
-	client, err := mac.NewECSClient("") // default profile
+	client, err := mac.NewECSClient()
 	if err != nil {
 		return resp, err
 	}
@@ -79,7 +79,7 @@ func HandleRequest(ctx context.Context, req events.APIGatewayProxyRequest) (even
 		return resp, err
 	}
 
-	executor := mac.NewPlanExecutor(client, fetcher.Plans, "") // default profile
+	executor := mac.NewPlanExecutor(client, fetcher.Plans)
 	rep := mac.NewReporter(executor)
 	action := req.QueryStringParameters["do"]
 	switch action {

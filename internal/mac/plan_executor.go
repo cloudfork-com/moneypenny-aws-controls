@@ -18,38 +18,34 @@ type PlanExecutor struct {
 	dryRun   bool
 	weekPlan *WeekPlan
 	plans    []*ServicePlan
-	profile  string
 	client   *ecs.Client
 }
 
-func NewPlanExecutor(client *ecs.Client, plans []*ServicePlan, profile string) *PlanExecutor {
+func NewPlanExecutor(client *ecs.Client, plans []*ServicePlan) *PlanExecutor {
 	wp := new(WeekPlan)
 	for _, each := range plans {
 		wp.AddServicePlan(*each)
 	}
-	return &PlanExecutor{weekPlan: wp, dryRun: true, profile: profile, plans: plans, client: client}
+	return &PlanExecutor{weekPlan: wp, dryRun: true, plans: plans, client: client}
 }
 
-func setLogContext(action, profile string) {
+func setLogContext(action string) {
 	clog := slog.With("x", action)
-	if profile != "" {
-		clog = clog.With("profile", profile)
-	}
 	slog.SetDefault(clog)
 }
 
 func (p *PlanExecutor) Plan() error {
-	setLogContext("plan", p.profile)
+	setLogContext("plan")
 	return p.exec()
 }
 func (p *PlanExecutor) Apply() error {
-	setLogContext("apply", p.profile)
+	setLogContext("apply")
 	p.dryRun = false
 	return p.exec()
 }
 
 func (p *PlanExecutor) Start(serviceARN string) error {
-	setLogContext("start", p.profile)
+	setLogContext("start")
 	p.dryRun = false
 	if serviceARN == "" {
 		return errors.New("no service ARN was given")
@@ -58,7 +54,7 @@ func (p *PlanExecutor) Start(serviceARN string) error {
 }
 
 func (p *PlanExecutor) Stop(serviceARN string) error {
-	setLogContext("stop", p.profile)
+	setLogContext("stop")
 	p.dryRun = false
 	if serviceARN == "" {
 		return errors.New("no service ARN was given")
@@ -67,7 +63,7 @@ func (p *PlanExecutor) Stop(serviceARN string) error {
 }
 
 func (p *PlanExecutor) ChangeTaskCount(serviceARN string, countInput string) error {
-	setLogContext("change-count", p.profile)
+	setLogContext("change-count")
 	p.dryRun = false
 	if serviceARN == "" {
 		return errors.New("no service ARN was given")
@@ -83,19 +79,19 @@ func (p *PlanExecutor) ChangeTaskCount(serviceARN string, countInput string) err
 }
 
 func (p *PlanExecutor) Report() error {
-	setLogContext("report", p.profile)
+	setLogContext("report")
 	slog.Info("write report")
 	return NewReporter(p).Report()
 }
 
 func (p *PlanExecutor) Status() error {
-	setLogContext("status", p.profile)
+	setLogContext("status")
 	slog.Info("write status")
 	return NewReporter(p).Status()
 }
 
 func (p *PlanExecutor) Schedule() error {
-	setLogContext("schedule", p.profile)
+	setLogContext("schedule")
 	slog.Info("write schedule")
 	return NewReporter(p).Schedule()
 }

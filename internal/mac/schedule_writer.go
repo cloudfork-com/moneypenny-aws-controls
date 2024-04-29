@@ -35,12 +35,12 @@ func (r ScheduleWriter) scheduleTemplate() (*template.Template, error) {
 	return tmpl, nil
 }
 
-func (r ScheduleWriter) WriteOn(profile string, wp *WeekPlan, w io.Writer) error {
+func (r ScheduleWriter) WriteOn(wp *WeekPlan, w io.Writer) error {
 	tmpl, err := r.scheduleTemplate()
 	if err != nil {
 		return err
 	}
-	wd := WeekData{Profile: profile}
+	wd := WeekData{}
 	for d := 0; d < 7; d++ {
 		dd := DayData{}
 		day := time.Weekday(d)
@@ -70,8 +70,7 @@ func (r ScheduleWriter) WriteOn(profile string, wp *WeekPlan, w io.Writer) error
 }
 
 type WeekData struct {
-	Profile string
-	Days    []DayData
+	Days []DayData
 }
 type DayData struct {
 	Name      string

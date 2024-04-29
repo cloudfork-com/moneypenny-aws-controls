@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 )
 
-func NewECSClient(profile string) (*ecs.Client, error) {
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile(profile))
+func NewECSClient() (*ecs.Client, error) {
+	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		slog.Error("config fail", "err", err)
 		return nil, err

@@ -64,7 +64,7 @@ This exression means "use the value of the `moneypenny` tag as specified by `oth
 ### Local run
 
 You can run the program `awscontrols` on your local machine to `plan`, `report` and `apply` the schedule without AWS deployment.
-The program will scan all services of all clusters for the active AWS profile (or as specified by `-profile`).
+The program will scan all services of all clusters for the active AWS profile.
 
 Alternatively, you can run the program using a local defined services-plan file:
 ```
