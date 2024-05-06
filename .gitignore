@@ -5,6 +5,7 @@ cmd/awscontrols/Makefile
 lambda/bootstrap
 lambda/*.zip
 lambda/*.sh
+internal/mac/awscontrols-report.html
 internal/mac/default-report.html
 .DS_Store
 

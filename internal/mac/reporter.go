@@ -101,7 +101,7 @@ func (r *Reporter) WriteStatusOn(w io.Writer) error {
 func (r *Reporter) WriteControlsOn(w io.Writer) error {
 	content := `
 	<div class="controls">
-		<button class="controlsaction" type="button" onclick="location.href='?do=schedule'" >Schedule</button>
+		<button class="controlsaction" type="button" onclick="location.href='?do=report'" >Report</button>
 		<button class="controlsaction preferred" type="button" onclick="location.href='?do=plan'" >Plan</button>
 		<button class="controlsaction" type="button" onclick="location.href='?do=apply'" >Apply</button>
 	</div>
