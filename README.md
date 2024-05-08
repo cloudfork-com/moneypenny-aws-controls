@@ -59,7 +59,7 @@ The value of the `moneypenny` tag can also refer to the tag value of another ser
 ```
 @other-service
 ```
-This exression means "use the value of the `moneypenny` tag as specified by `other-service` (for now, only within the same cluster).
+This expression means "use the value of the `moneypenny` tag as specified by `other-service` (for now, only within the same cluster).
 
 ### Local run
 
