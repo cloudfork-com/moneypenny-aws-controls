@@ -71,60 +71,6 @@ Alternatively, you can run the program using a local defined services-plan file:
 awscontrols -local -debug -plans aws-service-plans.json plan
 ```
 
-### AWS deployment
-
-`moneypenny-aws-controls` is deployed as a AWS Lambda service that is invoked by the AWS EventBridge Scheduler or by your Browser.
-Access from the Browser requires Basic Authentication ; because of the Browser access requirement, AWS IAM cannot be used.
-The credentials need to be provided as environment variable values upon deployment.
-Goto the folder `lambda` to find scripts and resources for deployment.
-
-#### create IAM Policy
-
-Create a policy named `moneypenny-aws-controls-policy` using permissions as defined in `iam-policy.json`.
-
-#### create IAM Role
-
-Create a role named `moneypenny-aws-controls-role`:
-
-- Trusted entity type = AWS Service
-- Use case, Service = Lambda
-- Policy = `moneypenny-aws-controls-policy`
-
-#### deploy Lambda service (ARM64)
-
-The `Makefile` has a `TIME_ZONE` environment variable you might need to change.
-In the commands below, replace the ROLE arn with that of `moneypenny-aws-controls-role` you just created.
-Also, replace the USER and PASSWORD values.
-
-```
-make compile 
-make zip
-BASIC_USER=myuser BASIC_PASSWORD=mypwd ROLE=arn:aws:iam::111111111:role/moneypenny-aws-controls-role make create
-```
-
-#### add trigger for Lambda service (API Gateway)
-
-- create a new API Gateway HTTP API
-
-Now you have an API endpoint that you can visit to see the current Schedule.
-
-#### define apply schedule
-
-Using the Amazon EventBridge Scheduler you define a new schedule that targets the service.
-
-- create a new schedule called `apply-hourly-moneypenny-aws-controls`
-- set the cron expression to `5 * * * ? *` , which means run 5 minutes past every hour
-- set the target to the Lambda `moneypenny-aws-controls`
-- set the payload to:
-```
-{
-    "queryStringParameters":{
-        "do":"apply"
-    }
-}
-```
-- change the role name to `Amazon_EventBridge_Scheduler_LAMBDA_moneypenny_aws_controls` for better recognition when listing roles in AWS console.
-
 ### Local config
 
 Next to or instead of using resource tags, you can use the program by specifying a `aws-service-plans.json` file. 
@@ -159,6 +105,17 @@ To generate the schedule:
 ```
 awscontrols -plans aws-service-plans.json schedule
 ```
+
+### AWS deployment
+
+`moneypenny-aws-controls` is deployed as a AWS Lambda service that is invoked by the AWS EventBridge Scheduler or by your Browser.
+Access from the Browser requires Basic Authentication ; because of the Browser access requirement, AWS IAM cannot be used.
+The credentials need to be provided as environment variable values upon deployment.
+
+There are ways to deploy this service:
+
+- [AWS CDK](cdk/moneypenny/README.md)
+- [AWS Console](AWS_console.md)
 
 ### Terraform
 
