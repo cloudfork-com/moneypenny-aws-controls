@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
-	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsiam"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
 )
@@ -59,13 +59,40 @@ func NewMoneypennyStack(scope constructs.Construct, id string, props *Moneypenny
 	}
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
-	// https://aws.amazon.com/blogs/compute/migrating-aws-lambda-functions-from-the-go1-x-runtime-to-the-custom-runtime-on-amazon-linux-2/
-	awslambda.NewFunction(stack, jsii.String("moneypenny-aws-controls"), &awslambda.FunctionProps{
-		Code:         awslambda.Code_FromAsset(jsii.String("../../lambda"), nil), //folder where bootstrap executable is located
-		Runtime:      awslambda.Runtime_PROVIDED_AL2023(),
-		Handler:      jsii.String("bootstrap"),
-		Architecture: awslambda.Architecture_ARM_64(),
+	role := awsiam.NewRole(stack, jsii.String("moneypenny-aws-controls-role"), &awsiam.RoleProps{
+		AssumedBy: awsiam.NewServicePrincipal(jsii.String("ecs.amazonaws.com"), nil),
 	})
+	role.AddToPolicy(awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
+		Effect: awsiam.Effect_ALLOW,
+		Actions: jsii.Strings(
+			"ecs:ListServices",
+			"ecs:UpdateService",
+			"ecs:ListTagsForResource",
+			"ecs:ListTasks",
+			"ecs:StopTask",
+			"ecs:DescribeServices",
+			"ecs:DescribeTaskSets",
+			"ecs:DescribeTasks",
+			"ecs:ListTaskDefinitions",
+			"ecs:ListClusters",
+		),
+		Resources: jsii.Strings("*"),
+	}))
 
+	// Add a managed policy to a role you can use
+	role.AddManagedPolicy(
+		// which to use?
+		awsiam.ManagedPolicy_FromAwsManagedPolicyName(jsii.String("service-role/AWSLambdaBasicExecutionRole")),
+	)
+
+	/**
+		// https://aws.amazon.com/blogs/compute/migrating-aws-lambda-functions-from-the-go1-x-runtime-to-the-custom-runtime-on-amazon-linux-2/
+		awslambda.NewFunction(stack, jsii.String("moneypenny-aws-controls"), &awslambda.FunctionProps{
+			Code:         awslambda.Code_FromAsset(jsii.String("../../lambda"), nil), //folder where bootstrap executable is located
+			Runtime:      awslambda.Runtime_PROVIDED_AL2023(),
+			Handler:      jsii.String("bootstrap"),
+			Architecture: awslambda.Architecture_ARM_64(),
+		})
+	**/
 	return stack
 }
