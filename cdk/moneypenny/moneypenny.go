@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/aws/aws-cdk-go/awscdk/awslogs"
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigatewayv2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigatewayv2integrations"
@@ -88,7 +89,7 @@ func NewMoneypennyStack(scope constructs.Construct, id string, props *Moneypenny
 
 	// https://aws.amazon.com/blogs/compute/migrating-aws-lambda-functions-from-the-go1-x-runtime-to-the-custom-runtime-on-amazon-linux-2/
 	lambda := awslambda.NewFunction(stack, jsii.String("moneypenny-aws-controls"), &awslambda.FunctionProps{
-		Code:         awslambda.Code_FromAsset(jsii.String("../../lambda"), nil), //folder where bootstrap executable is located
+		Code:         awslambda.Code_FromAsset(jsii.String("../../bootstrap"), nil), // folder where bootstrap executable is located
 		Runtime:      awslambda.Runtime_PROVIDED_AL2023(),
 		Handler:      jsii.String("bootstrap"),
 		Architecture: awslambda.Architecture_ARM_64(),
@@ -97,6 +98,13 @@ func NewMoneypennyStack(scope constructs.Construct, id string, props *Moneypenny
 		Environment: &map[string]*string{
 			"Variables": jsii.String("{TIME_ZONE=Europe/Amsterdam,BASIC_USER=nil,BASIC_PASSWORD=zork}"),
 		},
+		MemorySize: jsii.Number(128),
+		Timeout:    awscdk.Duration_Seconds(jsii.Number(10)),
+		CurrentVersionOptions: &awslambda.VersionOptions{
+			RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
+			RetryAttempts: jsii.Number(1),
+		},
+		LogRetention: awslogs.RetentionDays_FIVE_DAYS,
 	})
 
 	// Create an API Gateway
