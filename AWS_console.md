@@ -16,12 +16,11 @@ Create a role named `moneypenny-aws-controls-role`:
 
 The `Makefile` has a `TIME_ZONE` environment variable you might need to change.
 In the commands below, replace the ROLE arn with that of `moneypenny-aws-controls-role` you just created.
-Also, replace the USER and PASSWORD values.
 
 ```
 make compile 
 make zip
-BASIC_USER=myuser BASIC_PASSWORD=mypwd ROLE=arn:aws:iam::111111111:role/moneypenny-aws-controls-role make create
+ROLE=arn:aws:iam::111111111:role/moneypenny-aws-controls-role make create
 ```
 
 #### add trigger for Lambda service (API Gateway)

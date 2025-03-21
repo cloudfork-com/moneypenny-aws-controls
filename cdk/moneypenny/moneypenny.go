@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/aws/aws-cdk-go/awscdk/awslogs"
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigatewayv2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigatewayv2integrations"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsiam"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awslogs"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awss3assets"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
 )
@@ -89,7 +90,7 @@ func NewMoneypennyStack(scope constructs.Construct, id string, props *Moneypenny
 
 	// https://aws.amazon.com/blogs/compute/migrating-aws-lambda-functions-from-the-go1-x-runtime-to-the-custom-runtime-on-amazon-linux-2/
 	lambda := awslambda.NewFunction(stack, jsii.String("moneypenny-aws-controls"), &awslambda.FunctionProps{
-		Code:         awslambda.Code_FromAsset(jsii.String("../../bootstrap"), nil), // folder where bootstrap executable is located
+		Code:         awslambda.Code_FromAsset(jsii.String("../../lambda"), &awss3assets.AssetOptions{}), // folder where bootstrap executable is located
 		Runtime:      awslambda.Runtime_PROVIDED_AL2023(),
 		Handler:      jsii.String("bootstrap"),
 		Architecture: awslambda.Architecture_ARM_64(),
@@ -107,14 +108,22 @@ func NewMoneypennyStack(scope constructs.Construct, id string, props *Moneypenny
 		LogRetention: awslogs.RetentionDays_FIVE_DAYS,
 	})
 
+	// Add protected URL
+	// TODO needed when using API Gateway ???
+	lambda.AddFunctionUrl(&awslambda.FunctionUrlOptions{
+		AuthType: awslambda.FunctionUrlAuthType_AWS_IAM,
+	})
+
 	// Create an API Gateway
 	awsapigatewayv2.NewHttpApi(stack, jsii.String("moneypenny-aws-controls-api"), &awsapigatewayv2.HttpApiProps{
 		ApiName: jsii.String("Moneypenny AWS Controls API"),
 		CorsPreflight: &awsapigatewayv2.CorsPreflightOptions{
 			AllowHeaders: jsii.Strings("*"),
-			AllowMethods: &[]awsapigatewayv2.CorsHttpMethod{"GET", "POST", "PUT", "DELETE"},
+			AllowMethods: &[]awsapigatewayv2.CorsHttpMethod{"GET", "POST"},
 			AllowOrigins: jsii.Strings("*"),
 		},
+		CreateDefaultStage: jsii.Bool(true),
+		//DefaultAuthorizer: &awsapigatewayv2.IamAuthorizer{
 	})
 
 	// Create a Lambda integration
