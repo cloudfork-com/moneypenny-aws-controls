@@ -88,9 +88,9 @@ func NewMoneypennyStack(scope constructs.Construct, id string, props *Moneypenny
 	// role.AddManagedPolicy(awsiam.ManagedPolicy_FromAwsManagedPolicyName(jsii.String("AmazonECS_FullAccess")))
 	// role.AddManagedPolicy(awsiam.ManagedPolicy_FromAwsManagedPolicyName(jsii.String("service-role/AWSLambdaBasicExecutionRole")))
 
-	// https://aws.amazon.com/blogs/compute/migrating-aws-lambda-functions-from-the-go1-x-runtime-to-the-custom-runtime-on-amazon-linux-2/
-	lambda := awslambda.NewFunction(stack, jsii.String("moneypenny-aws-controls"), &awslambda.FunctionProps{
-		Code:         awslambda.Code_FromAsset(jsii.String("../../lambda"), &awss3assets.AssetOptions{}), // folder where bootstrap executable is located
+	// https://aws.amazon.com/blogs/compute/migrating-aws-controlsLambda-functions-from-the-go1-x-runtime-to-the-custom-runtime-on-amazon-linux-2/
+	controlsLambda := awslambda.NewFunction(stack, jsii.String("moneypenny-aws-controls"), &awslambda.FunctionProps{
+		Code:         awslambda.Code_FromAsset(jsii.String("../../controls-lambda"), &awss3assets.AssetOptions{}), // folder where bootstrap executable is located
 		Runtime:      awslambda.Runtime_PROVIDED_AL2023(),
 		Handler:      jsii.String("bootstrap"),
 		Architecture: awslambda.Architecture_ARM_64(),
@@ -110,7 +110,7 @@ func NewMoneypennyStack(scope constructs.Construct, id string, props *Moneypenny
 
 	// Add protected URL
 	// TODO needed when using API Gateway ???
-	lambda.AddFunctionUrl(&awslambda.FunctionUrlOptions{
+	controlsLambda.AddFunctionUrl(&awslambda.FunctionUrlOptions{
 		AuthType: awslambda.FunctionUrlAuthType_AWS_IAM,
 	})
 
@@ -123,25 +123,23 @@ func NewMoneypennyStack(scope constructs.Construct, id string, props *Moneypenny
 			AllowOrigins: jsii.Strings("*"),
 		},
 		CreateDefaultStage: jsii.Bool(true),
-		//DefaultAuthorizer: &awsapigatewayv2.IamAuthorizer{
 	})
 
 	// Create a Lambda integration
 	lambdaIntegration := awsapigatewayv2integrations.NewHttpLambdaIntegration(
 		jsii.String("moneypenny-aws-controls-integration"),
-		lambda,
+		controlsLambda,
 		&awsapigatewayv2integrations.HttpLambdaIntegrationProps{})
-
-	authorizer := awsapigatewayv2.NewHttpAuthorizer(stack,
-		jsii.String("moneypenny-aws-controls-authorizer"),
-		&awsapigatewayv2.HttpAuthorizerProps{})
 
 	awsapigatewayv2.NewHttpRoute(stack, jsii.String("moneypenny-aws-controls-get"), &awsapigatewayv2.HttpRouteProps{
 		HttpApi:     httpApi,
 		Integration: lambdaIntegration,
-		Authorizer:  authorizer,
 		RouteKey:    awsapigatewayv2.HttpRouteKey_With(jsii.String("/"), awsapigatewayv2.HttpMethod_GET),
 	})
-
+	awsapigatewayv2.NewHttpRoute(stack, jsii.String("moneypenny-aws-controls-post"), &awsapigatewayv2.HttpRouteProps{
+		HttpApi:     httpApi,
+		Integration: lambdaIntegration,
+		RouteKey:    awsapigatewayv2.HttpRouteKey_With(jsii.String("/"), awsapigatewayv2.HttpMethod_POST),
+	})
 	return stack
 }
