@@ -115,7 +115,7 @@ func NewMoneypennyStack(scope constructs.Construct, id string, props *Moneypenny
 	})
 
 	// Create an API Gateway
-	awsapigatewayv2.NewHttpApi(stack, jsii.String("moneypenny-aws-controls-api"), &awsapigatewayv2.HttpApiProps{
+	httpApi := awsapigatewayv2.NewHttpApi(stack, jsii.String("moneypenny-aws-controls-api"), &awsapigatewayv2.HttpApiProps{
 		ApiName: jsii.String("Moneypenny AWS Controls API"),
 		CorsPreflight: &awsapigatewayv2.CorsPreflightOptions{
 			AllowHeaders: jsii.Strings("*"),
@@ -127,10 +127,21 @@ func NewMoneypennyStack(scope constructs.Construct, id string, props *Moneypenny
 	})
 
 	// Create a Lambda integration
-	awsapigatewayv2integrations.NewHttpLambdaIntegration(
+	lambdaIntegration := awsapigatewayv2integrations.NewHttpLambdaIntegration(
 		jsii.String("moneypenny-aws-controls-integration"),
 		lambda,
 		&awsapigatewayv2integrations.HttpLambdaIntegrationProps{})
+
+	authorizer := awsapigatewayv2.NewHttpAuthorizer(stack,
+		jsii.String("moneypenny-aws-controls-authorizer"),
+		&awsapigatewayv2.HttpAuthorizerProps{})
+
+	awsapigatewayv2.NewHttpRoute(stack, jsii.String("moneypenny-aws-controls-get"), &awsapigatewayv2.HttpRouteProps{
+		HttpApi:     httpApi,
+		Integration: lambdaIntegration,
+		Authorizer:  authorizer,
+		RouteKey:    awsapigatewayv2.HttpRouteKey_With(jsii.String("/"), awsapigatewayv2.HttpMethod_GET),
+	})
 
 	return stack
 }
